@@ -1,0 +1,2987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>AgriPulse Pro - Autonomous Smart Farm Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d'
+            },
+            skybrand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1'
+            },
+            twilio: {
+              50: '#fef2f2',
+              100: '#fee2e2',
+              500: '#F22F46',
+              600: '#E01A31',
+              700: '#C71025'
+            },
+            telegram: {
+              500: '#229ED9',
+              600: '#1e88bb',
+              700: '#166991'
+            }
+          },
+          animation: {
+            'float-slow': 'float 8s ease-in-out infinite',
+            'float-delayed': 'float 10s ease-in-out 3s infinite',
+            'slide-in-right': 'slideInRight 0.35s ease-out',
+            'spin-slow': 'spin 4s linear infinite',
+            'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' }
+            },
+            slideInRight: {
+              '0%': { transform: 'translateX(100%)', opacity: 0 },
+              '100%': { transform: 'translateX(0)', opacity: 1 }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f0f7ff;
+      color: #0f172a;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .blob-1 {
+      position: absolute;
+      top: -10%;
+      left: -5%;
+      width: 650px;
+      height: 650px;
+      background: radial-gradient(circle, rgba(186, 230, 253, 0.75) 0%, rgba(186, 230, 253, 0) 70%);
+      filter: blur(50px);
+      border-radius: 50%;
+    }
+
+    .blob-2 {
+      position: absolute;
+      top: 25%;
+      right: -10%;
+      width: 750px;
+      height: 750px;
+      background: radial-gradient(circle, rgba(187, 247, 208, 0.65) 0%, rgba(187, 247, 208, 0) 70%);
+      filter: blur(60px);
+      border-radius: 50%;
+    }
+
+    .blob-3 {
+      position: absolute;
+      bottom: -10%;
+      left: 20%;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(224, 242, 254, 0.8) 0%, rgba(254, 240, 138, 0.25) 50%, rgba(224, 242, 254, 0) 70%);
+      filter: blur(70px);
+      border-radius: 50%;
+    }
+
+    .topo-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(2, 132, 199, 0.08) 1.5px, transparent 1.5px),
+        linear-gradient(to right, rgba(14, 165, 233, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px, 64px 64px, 64px 64px;
+      background-position: 0 0, 0 0, 0 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .awesome-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 30px -5px rgba(2, 132, 199, 0.07), 0 4px 12px -2px rgba(0, 0, 0, 0.03), inset 0 1px 1px rgba(255, 255, 255, 1);
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .awesome-card:hover {
+      background: rgba(255, 255, 255, 0.98);
+      border-color: rgba(14, 165, 233, 0.35);
+      box-shadow: 0 20px 40px -10px rgba(2, 132, 199, 0.15), 0 6px 16px -2px rgba(0, 0, 0, 0.04);
+      transform: translateY(-3px);
+    }
+
+    /* Scanner beam animation */
+    .scanner-beam {
+      background: linear-gradient(180deg, rgba(14, 165, 233, 0) 0%, rgba(14, 165, 233, 0.4) 50%, rgba(14, 165, 233, 0.95) 100%);
+      box-shadow: 0 0 16px rgba(14, 165, 233, 0.8);
+      animation: scanAnim 2.8s infinite alternate ease-in-out;
+    }
+    @keyframes scanAnim {
+      0% { top: 4%; opacity: 0.9; }
+      100% { top: 90%; opacity: 0.2; }
+    }
+
+    /* Pump glowing & turbine animations */
+    @keyframes pump-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
+      50% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+    }
+    .motor-glowing {
+      animation: pump-glow 2s infinite ease-in-out;
+    }
+
+    @keyframes rotate-turbine {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .turbine-active {
+      animation: rotate-turbine 1.2s linear infinite;
+    }
+
+    /* Water flow ripple pipeline */
+    @keyframes waterFlow {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 0; }
+    }
+    .water-pipe-active {
+      background: linear-gradient(90deg, #38bdf8 0%, #0284c7 50%, #38bdf8 100%);
+      background-size: 40px 100%;
+      animation: waterFlow 0.8s linear infinite;
+    }
+
+    /* Enhanced Image & Card Hover Animations */
+    .image-hover-zoom {
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+    }
+    .image-hover-zoom:hover {
+      transform: scale(1.10) rotate(-2deg);
+      box-shadow: 0 12px 28px -6px rgba(14, 165, 233, 0.35);
+    }
+    
+    .leaf-viewfinder-box {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .leaf-viewfinder-box:hover {
+      transform: scale(1.015);
+      border-color: rgba(14, 165, 233, 0.6);
+      box-shadow: 0 0 25px rgba(14, 165, 233, 0.25);
+    }
+
+    .custom-scroll::-webkit-scrollbar { width: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.7); border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+
+    /* Print Report Styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-report-area, #printable-report-area * {
+        visibility: visible;
+      }
+      #printable-report-area {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: white !important;
+        color: black !important;
+        padding: 30px;
+        z-index: 99999;
+      }
+    }
+
+    /* Mobile App & UX Optimizations */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, select, input {
+      touch-action: manipulation;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes tabSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .tab-content-active {
+      animation: tabSlideUp 0.22s ease-out forwards;
+    }
+
+    @media (max-width: 1023px) {
+      * {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .ambient-bg {
+        display: none !important;
+      }
+      .awesome-card {
+        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05) !important;
+        transform: none !important;
+      }
+      body {
+        padding-bottom: 90px !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-sky-500 selection:text-white pb-14">
+
+  <!-- Ambient Background -->
+  <div class="ambient-bg">
+    <div class="blob-1 animate-float-slow"></div>
+    <div class="blob-2 animate-float-delayed"></div>
+    <div class="blob-3"></div>
+  </div>
+  <div class="topo-overlay"></div>
+
+  <!-- Hidden Audio Player for Realistic Female Voice Stream -->
+  <audio id="tts-audio-player" class="hidden"></audio>
+
+  <!-- ================= CALLMEBOT TELEGRAM NOTIFICATION TOAST ================= -->
+  <div id="sms-toast" class="fixed top-5 right-5 z-50 max-w-sm hidden animate-slide-in-right">
+    <div class="bg-slate-900/95 text-white p-4 rounded-3xl shadow-2xl border border-sky-500/40 backdrop-blur-xl space-y-2.5">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-sky-500/20 text-sky-400 rounded-xl flex items-center justify-center">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </span>
+          <div>
+            <h4 class="font-black text-sky-400 text-xs">Automated Telegram Dispatched</h4>
+            <p id="sms-toast-to" class="text-[10px] text-slate-400 font-mono">Telegram (@jakeernabi) Sent</p>
+          </div>
+        </div>
+        <span class="text-[9px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded font-mono">CallMeBot</span>
+      </div>
+
+      <!-- Attached Captured Snapshot Preview in Notification -->
+      <div id="toast-photo-preview" class="p-2 bg-slate-950 rounded-2xl border border-slate-800 flex items-center gap-3">
+        <div id="toast-photo-thumb" class="w-12 h-12 rounded-xl bg-slate-800 border border-sky-500/50 flex items-center justify-center shrink-0 overflow-hidden text-sky-400 text-lg">
+          🤖
+        </div>
+        <div class="text-[11px] leading-tight space-y-0.5">
+          <strong id="toast-disease-name" class="text-sky-400 block font-bold">Automated Telegram Dispatched</strong>
+          <p id="sms-toast-msg" class="text-slate-300 text-[10px]">Instant background alert dispatched to @jakeernabi via CallMeBot.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOP FLOATING NAVIGATION BAR ================= -->
+  <header class="sticky top-2 z-40 w-full px-3 sm:px-6 lg:px-8">
+    <div class="bg-white/95 backdrop-blur-xl border border-white/80 shadow-lg shadow-sky-950/5 rounded-3xl p-3 sm:px-6 sm:py-3 flex flex-col gap-2.5">
+      
+      <!-- Top Row: Brand, Farmer & Status -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center space-x-2.5 sm:space-x-3.5">
+          <div class="bg-gradient-to-tr from-sky-500 via-sky-600 to-emerald-400 text-white p-2 sm:p-2.5 rounded-2xl shadow-md shadow-sky-500/25 flex items-center justify-center">
+            <i data-lucide="sprout" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900">
+                Agri<span class="text-sky-600">Pulse</span>
+              </h1>
+              <span class="text-[10px] sm:text-[11px] bg-gradient-to-r from-sky-50 to-emerald-50 text-sky-800 border border-sky-200 px-2 py-0.5 rounded-full font-black tracking-wide shadow-sm">
+                PRO v2.6
+              </span>
+            </div>
+            <!-- Farmer Profile Switcher -->
+            <button onclick="openFarmerAuthModal()" class="text-xs font-bold text-slate-700 hover:text-sky-600 flex items-center gap-1 transition-colors cursor-pointer text-left" title="Click to edit Farmer Profile & Twilio SMS Details">
+              <i data-lucide="user-check" class="w-3 h-3 text-emerald-600"></i>
+              <span id="nav-farmer-name">Farmer: Jack</span>
+              <span class="text-slate-300">•</span>
+              <span id="nav-farmer-id" class="font-mono text-[9px] text-sky-700 font-extrabold">Plot: AGRI-TEL-084</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Live Status Pill -->
+          <div class="flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-2xl shadow-sm">
+            <span class="relative flex h-2 w-2">
+              <span id="conn-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span id="conn-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span id="conn-status" class="text-[11px] font-black text-emerald-800">Live IoT</span>
+          </div>
+
+          <!-- CallMeBot Telegram Gateway Settings Button -->
+          <button onclick="openWhatsAppModal()" class="p-2 bg-sky-50 hover:bg-sky-100 text-sky-600 hover:text-sky-700 rounded-2xl border border-sky-200 shadow-sm transition-colors cursor-pointer flex items-center justify-center" title="Telegram (@jakeernabi) Alert Gateway & Settings">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Swipeable Ribbon: Crop, Location, Language, AI Model, Report -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 scroll-smooth">
+        <!-- 12-Crop Selector -->
+        <div class="flex items-center bg-slate-50 border border-slate-200 hover:border-sky-300 rounded-2xl px-2.5 py-1.5 shadow-sm text-xs shrink-0">
+          <span class="text-slate-500 font-medium mr-1">Crop:</span>
+          <select id="crop-select" onchange="onCropChange()" class="bg-transparent text-slate-900 font-black focus:outline-none cursor-pointer max-w-[135px] truncate">
+            <option value="tomato">🍅 Tomato</option>
+            <option value="paddy">🌾 Rice / Paddy</option>
+            <option value="cotton">🌱 Cotton</option>
+            <option value="chilli">🌶️ Chilli</option>
+            <option value="maize">🌽 Maize</option>
+            <option value="onion">🧅 Onion</option>
+            <option value="wheat">🌾 Wheat</option>
+            <option value="potato">🥔 Potato</option>
+            <option value="soybean">🫘 Soybean</option>
+            <option value="grapes">🍇 Grapes</option>
+            <option value="mango">🥭 Mango</option>
+            <option value="sugarcane">🌿 Sugarcane</option>
+          </select>
+        </div>
+
+        <!-- Live Search Location Button -->
+        <button onclick="openSearchModal()" class="flex items-center bg-slate-50 hover:bg-sky-50 border border-slate-200 hover:border-sky-400 rounded-2xl px-3 py-1.5 shadow-sm text-xs font-bold text-slate-800 transition-colors cursor-pointer shrink-0">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-sky-600 mr-1.5"></i>
+          <span id="nav-location-label" class="max-w-[120px] truncate">📍 Hyderabad, TS</span>
+        </button>
+
+        <button onclick="useDeviceGPS()" title="Detect My Exact Farm GPS Location" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-2.5 py-1.5 rounded-2xl flex items-center gap-1 text-xs font-bold cursor-pointer transition-colors shadow-sm shrink-0">
+          <i data-lucide="crosshair" class="w-3.5 h-3.5 text-sky-600"></i>
+          <span>GPS</span>
+        </button>
+
+        <!-- Language Selector -->
+        <div class="flex items-center bg-slate-50 border border-slate-200 hover:border-sky-300 rounded-2xl px-2.5 py-1.5 shadow-sm text-xs shrink-0">
+          <i data-lucide="languages" class="w-3.5 h-3.5 text-sky-600 mr-1"></i>
+          <select id="lang-select" onchange="onLangChange()" class="bg-transparent text-slate-900 font-black focus:outline-none cursor-pointer">
+            <option value="te">తెలుగు</option>
+            <option value="hi">हिन्दी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <!-- AI Model Switcher -->
+        <div class="flex items-center bg-slate-50 border border-slate-200 hover:border-sky-300 rounded-2xl px-2.5 py-1.5 shadow-sm text-xs shrink-0">
+          <i data-lucide="brain-circuit" class="w-3.5 h-3.5 text-indigo-600 mr-1"></i>
+          <select id="model-select" onchange="onModelChange()" class="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer">
+            <option value="gemini">✨ Gemini 2.5</option>
+            <option value="gpt4o">⚡ GPT-4o</option>
+            <option value="mobilenet">📱 MobileNet</option>
+          </select>
+        </div>
+
+        <!-- Print Farm Report Button -->
+        <button onclick="openPrintReportModal()" class="flex items-center bg-slate-50 hover:bg-sky-50 border border-slate-200 hover:border-sky-400 rounded-2xl px-3 py-1.5 shadow-sm text-xs font-bold text-slate-800 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0" title="Generate & Print Official Farm Diagnostic Report">
+          <i data-lucide="printer" class="w-3.5 h-3.5 text-sky-600 mr-1.5"></i>
+          <span>Report</span>
+          <span class="ml-1 text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-mono font-bold">Print</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="w-full px-4 sm:px-6 lg:px-8 space-y-6 mt-2">
+
+    <!-- ================= OPEN-METEO ACCURATE LIVE WEATHER BAR ================= -->
+    <div id="sec-weather" class="awesome-card p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="p-3 bg-gradient-to-tr from-amber-400 to-orange-400 text-white rounded-2xl shadow-md shadow-amber-500/20">
+          <i data-lucide="cloud-sun" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-sm font-black text-slate-900">Open-Meteo Accurate Live Farm Weather</h3>
+            <span id="weather-loc-tag" class="text-xs bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full font-bold">Hyderabad, TS (17.38°N, 78.48°E)</span>
+            <span id="weather-sync-pill" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono font-bold">● Live Synced</span>
+          </div>
+          <p id="weather-summary-text" class="text-xs text-slate-600 font-medium mt-0.5">
+            Clear Skies • Temperature: <strong class="text-slate-900" id="weather-temp-live">31.5°C</strong> • Rain Chance: <strong class="text-sky-700" id="weather-rain-text">10% (Safe for Spraying)</strong> • Wind: <strong class="text-slate-800" id="weather-wind">12 km/h</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs font-bold flex-wrap">
+        <div class="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="droplets" class="w-3.5 h-3.5 text-sky-500"></i>
+          <span>Rain Prob: <strong class="text-slate-900" id="weather-rain">10%</strong></span>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="sun-medium" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span>UV Index: <strong class="text-slate-900" id="weather-uv">6 (Moderate)</strong></span>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="gauge" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span>Evaporation (ET₀): <strong class="text-emerald-700" id="weather-et0">3.4 mm/d</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= HERO ACTIONABLE ADVISORY BANNER ================= -->
+    <div id="sec-advisory" class="awesome-card border-amber-300/80 bg-gradient-to-r from-amber-50/90 via-white/95 to-amber-50/60 p-5 sm:p-6 relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-200/30 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+        
+        <div class="flex items-start gap-4">
+          <div id="advisory-icon-bg" class="p-3.5 bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 rounded-2xl shrink-0 shadow-md shadow-amber-500/20 mt-0.5">
+            <i data-lucide="sparkles" class="w-6 h-6 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[11px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-md shadow-sm">
+                Doctor's Prescription
+              </span>
+              <span id="crop-stage-tag" class="text-xs font-bold text-slate-600">Tomato Plant • Flowering Stage</span>
+              <span class="text-slate-300">•</span>
+              <span class="text-xs font-extrabold text-rose-600 flex items-center gap-1">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i> Multi-Effect Stress Detected
+              </span>
+            </div>
+
+            <!-- Primary Diagnosis Title -->
+            <p id="advisory-text" class="text-base sm:text-lg font-black text-slate-900 mt-1.5 leading-snug">
+              Early Blight Leaf Spots detected + Nitrogen Yellowing. Spray Copper Oxychloride (3g/L) + Foliar Nitrogen.
+            </p>
+
+            <!-- Multilingual Translation Box -->
+            <p id="vernacular-advisory" class="text-xs sm:text-sm text-sky-950 font-bold mt-2 bg-white/95 p-3.5 rounded-2xl border border-sky-200 shadow-sm block leading-relaxed max-w-4xl">
+              సలహా: టమోటా ఆకు మచ్చ తెగులు మరియు నత్రజని లోపం. కాపర్ ఆక్సిక్లోరైడ్ 3 గ్రాములు 1 లీటరు నీటిలో కలిపి పిచికారీ చేయండి.
+            </p>
+          </div>
+        </div>
+
+        <!-- Realistic Fast Female Voice Assistant Button -->
+        <div class="flex items-center gap-3 self-stretch sm:self-auto shrink-0">
+          <button id="tts-button" onclick="speakAdvisory()" class="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 cursor-pointer">
+            <i data-lucide="volume-2" class="w-5 h-5"></i>
+            <span id="tts-button-text">🔊 సలహా వినండి (Audio)</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= 4 KEY TELEMETRY CARDS ================= -->
+    <div id="sec-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <!-- Card 1: Soil Wetness -->
+      <div class="tab-item-overview awesome-card p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Soil Wetness (VWC)</p>
+              <h3 id="val-moisture" class="text-3xl font-black text-sky-600 mt-1 tracking-tight">26%</h3>
+            </div>
+            <div class="p-3 bg-sky-50 text-sky-600 border border-sky-100 rounded-2xl shadow-sm">
+              <i data-lucide="droplet" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p id="moisture-status-text" class="text-xs font-bold text-amber-600 mt-2.5 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Soil is drying, needs water soon
+          </p>
+        </div>
+
+        <div class="mt-4">
+          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200">
+            <div id="bar-moisture" class="bg-gradient-to-r from-sky-500 to-emerald-400 h-full rounded-full transition-all duration-700 shadow-sm" style="width: 26%"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-slate-500 mt-1.5 font-bold">
+            <span>Dry (&lt;20%)</span>
+            <span class="text-emerald-700">Good (30-45%)</span>
+            <span>Wet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Field Temperature -->
+      <div class="tab-item-overview awesome-card p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Field Temperature</p>
+              <h3 id="val-temp" class="text-3xl font-black text-amber-500 mt-1 tracking-tight">31.5°C</h3>
+            </div>
+            <div class="p-3 bg-amber-50 text-amber-600 border border-amber-100 rounded-2xl shadow-sm">
+              <i data-lucide="sun" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p class="text-xs font-bold text-emerald-600 mt-2.5 flex items-center gap-1">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Pleasant warm weather
+          </p>
+        </div>
+
+        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-medium">
+          <span>Sunlight: <strong id="val-solar" class="text-slate-800 font-bold">Bright (704 W/m²)</strong></span>
+        </div>
+      </div>
+
+      <!-- Card 3: Air Humidity -->
+      <div class="tab-item-overview awesome-card p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Air Humidity</p>
+              <h3 id="val-humidity" class="text-3xl font-black text-sky-600 mt-1 tracking-tight">65%</h3>
+            </div>
+            <div class="p-3 bg-sky-50 text-sky-600 border border-sky-100 rounded-2xl shadow-sm">
+              <i data-lucide="wind" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p class="text-xs font-bold text-slate-600 mt-2.5 flex items-center gap-1">
+            <i data-lucide="cloud" class="w-3.5 h-3.5 text-sky-500"></i> Good moisture in the air
+          </p>
+        </div>
+
+        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-medium">
+          <span>Rain Forecast: <strong class="text-emerald-700 font-bold">Clear & Safe</strong></span>
+        </div>
+      </div>
+
+      <!-- Card 4: Water Motor / Pump with Robust Toggle & Flow Animations -->
+      <div id="actuator-card" class="tab-item-overview tab-item-pump awesome-card p-5 flex flex-col justify-between motor-glowing">
+        <div>
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="flex items-center gap-2">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Water Pump (Motor)</p>
+                <button onclick="togglePumpAutoMode()" id="pump-mode-badge" class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 cursor-pointer" title="Click to toggle between Auto and Manual mode">
+                  AUTO MODE
+                </button>
+              </div>
+              <h3 id="val-valve" class="text-2xl font-black text-emerald-600 mt-1 tracking-tight">PUMP RUNNING</h3>
+            </div>
+
+            <!-- Motor turbine animation box -->
+            <button onclick="toggleActuator()" title="Click to instantly Turn Motor ON / OFF" class="cursor-pointer focus:outline-none relative group">
+              <div id="valve-icon-box" class="p-3.5 bg-emerald-500 text-white rounded-2xl shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-all flex items-center justify-center">
+                <i id="motor-turbine-icon" data-lucide="fan" class="w-6 h-6 turbine-active"></i>
+              </div>
+            </button>
+          </div>
+
+          <!-- Animated Water Flow Pipeline -->
+          <div class="mt-3 space-y-1">
+            <div class="flex justify-between text-[10px] font-bold text-slate-500">
+              <span class="flex items-center gap-1">
+                <i data-lucide="waves" class="w-3 h-3 text-sky-500"></i> Pipeline Flow:
+              </span>
+              <span id="pipeline-flow-rate" class="text-emerald-600 font-mono">14.2 L/min</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+              <div id="water-flow-bar" class="h-full rounded-full water-pipe-active transition-all duration-500" style="width: 100%"></div>
+            </div>
+          </div>
+
+          <p id="val-actuation-desc" class="text-xs font-semibold text-slate-600 mt-2.5">
+            Auto Watering: Soil moisture is low
+          </p>
+        </div>
+
+        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-medium">Motor Control:</span>
+          <button onclick="toggleActuator()" id="pump-btn-text" class="text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-1.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm">
+            Turn OFF Motor
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= MOBILE DEDICATED PUMP & IRRIGATION COMMAND CENTER ================= -->
+    <div id="sec-pump-mobile" class="hidden space-y-5">
+      <div class="awesome-card p-6 flex flex-col justify-between motor-glowing">
+        <div>
+          <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                <i data-lucide="droplets" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-wide">
+                  Autonomous Irrigation & Pump Control
+                </h2>
+                <p class="text-xs text-slate-500 font-medium">Smart Soil Moisture-Triggered Actuation</p>
+              </div>
+            </div>
+            <button onclick="togglePumpAutoMode()" id="pump-mode-badge-mobile" class="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 cursor-pointer shadow-sm">
+              AUTO MODE
+            </button>
+          </div>
+
+          <!-- Large Central Motor Graphic with Rotating Turbine -->
+          <div class="mt-5 p-6 bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl border border-slate-800 text-center relative overflow-hidden shadow-inner">
+            <div class="flex justify-center mb-3">
+              <div id="valve-icon-box-mobile" class="w-20 h-20 bg-emerald-500 text-white rounded-3xl shadow-xl shadow-emerald-500/40 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform" onclick="toggleActuator()">
+                <i id="motor-turbine-icon-mobile" data-lucide="fan" class="w-10 h-10 turbine-active"></i>
+              </div>
+            </div>
+            <h3 id="val-valve-mobile" class="text-xl font-black text-emerald-400 tracking-tight">PUMP RUNNING</h3>
+            <p id="val-actuation-desc-mobile" class="text-xs text-slate-400 mt-1 font-medium">
+              Auto Watering Active: Soil moisture (26%) is below target threshold
+            </p>
+
+            <!-- Pipeline Flow Meter -->
+            <div class="mt-4 pt-4 border-t border-slate-800 space-y-1.5 text-left">
+              <div class="flex justify-between text-xs font-bold text-slate-400">
+                <span class="flex items-center gap-1.5 text-slate-300">
+                  <i data-lucide="waves" class="w-3.5 h-3.5 text-sky-400"></i> Main Pipeline Flow:
+                </span>
+                <span id="pipeline-flow-rate-mobile" class="text-emerald-400 font-mono font-black text-sm">14.2 L/min</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700">
+                <div id="water-flow-bar-mobile" class="h-full rounded-full water-pipe-active" style="width: 100%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manual On/Off Override Action Button -->
+          <div class="mt-5 flex gap-3">
+            <button onclick="toggleActuator()" id="pump-btn-text-mobile" class="flex-1 py-3.5 px-4 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-rose-500/25 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2">
+              <i data-lucide="power" class="w-4 h-4"></i>
+              <span>Turn OFF Motor (Manual)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Evaporation & Deficit Metrics -->
+        <div class="mt-5 pt-4 border-t border-slate-100 space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-sky-50 p-3 rounded-2xl border border-sky-100">
+              <span class="text-[11px] font-bold text-slate-500">Evaporation (ET₀)</span>
+              <h4 id="val-et0-mobile" class="text-base font-black text-sky-900 mt-0.5">3.4 mm / day</h4>
+            </div>
+            <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+              <span class="text-[11px] font-bold text-slate-500">Acre Deficit</span>
+              <h4 id="val-deficit-mobile" class="text-base font-black text-emerald-900 mt-0.5">~1,850 L/acre</h4>
+            </div>
+          </div>
+          <div class="p-3 bg-emerald-100/70 border border-emerald-200 rounded-2xl text-center text-xs font-black text-emerald-900">
+            ⚡ 30% Water Saved with Automatic Closed-Loop IoT
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 3 MAIN PANELS ================= -->
+    <div id="sec-panels-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+
+      <!-- PANEL 1: PLANT HEALTH CAMERA & MULTI-EFFECT AI DOCTOR -->
+      <div id="panel-camera" class="awesome-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-sky-50 text-sky-600 rounded-xl border border-sky-100">
+                <i data-lucide="camera" class="w-4 h-4"></i>
+              </div>
+              <h2 class="text-sm font-black text-slate-900 uppercase tracking-wide">
+                Multi-Effect AI Camera & Vision
+              </h2>
+            </div>
+            <span id="active-model-badge" class="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-0.5 rounded-full font-bold">
+              Gemini 2.5 Flash Vision
+            </span>
+          </div>
+
+          <!-- Futuristic Viewfinder with Multi-Bounding Box HUD & Animations -->
+          <div class="relative bg-slate-950 border border-slate-800 rounded-2xl mt-4 aspect-video flex items-center justify-center overflow-hidden shadow-inner group cursor-pointer transition-all duration-300 hover:border-sky-400 hover:shadow-sky-500/20 hover:shadow-xl">
+            <div class="absolute inset-0 bg-[radial-gradient(#0ea5e9_1px,transparent_1px)] [background-size:14px_14px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+            <div class="scanner-beam absolute left-0 right-0 h-1 z-20"></div>
+
+            <!-- SVG Visual Leaf Snapshot Frame with Simulated Lesions -->
+            <div id="camera-visual-frame" class="w-full h-full flex items-center justify-center p-4 relative">
+              <svg class="w-28 h-28 text-emerald-500/80 drop-shadow-md transform transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_12px_rgba(34,197,94,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+              </svg>
+              <!-- Target Red Lesion Circle 1 (Pathogen) -->
+              <div id="visual-lesion-point" class="absolute w-8 h-8 rounded-full border-2 border-rose-500 bg-rose-500/30 animate-ping" style="top: 38%; left: 46%;"></div>
+              <!-- Target Yellow Lesion Circle 2 (Secondary Chlorosis) -->
+              <div class="absolute w-6 h-6 rounded-full border-2 border-amber-400 bg-amber-400/30 animate-pulse" style="bottom: 25%; right: 35%;"></div>
+            </div>
+
+            <!-- Bounding Box #1: Primary Pathogen (Red) -->
+            <div id="ai-bbox-1" class="absolute border-2 border-dashed border-rose-500 rounded-xl p-1.5 z-20 transition-all duration-700 pointer-events-none" style="top: 18%; left: 20%; width: 44%; height: 50%;">
+              <div class="flex justify-between items-start">
+                <span class="text-[8px] font-black bg-rose-600 text-white px-1 py-0.2 rounded shadow">ROI #1: BLIGHT (95%)</span>
+              </div>
+            </div>
+
+            <!-- Bounding Box #2: Secondary Stress (Yellow) -->
+            <div id="ai-bbox-2" class="absolute border-2 border-dashed border-amber-400 rounded-xl p-1.5 z-20 transition-all duration-700 pointer-events-none" style="bottom: 12%; right: 18%; width: 38%; height: 42%;">
+              <div class="flex justify-between items-end h-full">
+                <span class="text-[8px] font-black bg-amber-500 text-slate-950 px-1 py-0.2 rounded shadow">ROI #2: CHLOROSIS (64%)</span>
+              </div>
+            </div>
+
+            <!-- Disease Badge -->
+            <div class="absolute bottom-3 left-3 z-30">
+              <span id="ai-badge-disease" class="text-xs font-black bg-amber-500 text-slate-950 px-2.5 py-1 rounded-xl shadow-md">
+                Early Blight + N-Deficiency
+              </span>
+            </div>
+
+            <!-- Multi-Class Confidence -->
+            <div class="absolute bottom-3 right-3 z-30">
+              <span id="ai-confidence" class="bg-white/95 text-slate-900 text-[11px] font-black px-2 py-1 rounded-lg shadow">
+                95% Match
+              </span>
+            </div>
+          </div>
+
+          <!-- Upload Custom Photo or Trigger Live Capture -->
+          <div class="mt-3 flex items-center gap-2">
+            <label class="flex-1 flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-dashed border-slate-300 hover:border-sky-400 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer">
+              <i data-lucide="upload-cloud" class="w-4 h-4 text-sky-600"></i>
+              <span>Upload Custom Leaf Photo</span>
+              <input type="file" id="leaf-photo-input" accept="image/*" onchange="handleCustomLeafUpload(event)" class="hidden" />
+            </label>
+          </div>
+
+          <!-- 🔬 LIVE MULTI-EFFECT BREAKDOWN -->
+          <div class="mt-3.5 p-3.5 bg-gradient-to-r from-sky-50 to-indigo-50/50 border border-sky-100 rounded-2xl space-y-2.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-slate-900 uppercase flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-sky-600"></i> Multi-Effect Stress Matrix
+              </span>
+              <span id="inference-state-tag" class="text-[10px] bg-rose-100 text-rose-800 border border-rose-200 font-bold px-2 py-0.5 rounded-full animate-pulse">
+                🔴 2 Outbreaks Found
+              </span>
+            </div>
+
+            <!-- Multi-Effect Pills -->
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center justify-between bg-white p-2 rounded-xl border border-slate-200">
+                <span class="text-slate-700 font-bold flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-rose-500"></span> Primary: <strong id="infer-class" class="text-slate-900">Early Blight Spots</strong>
+                </span>
+                <span id="infer-prob" class="font-bold text-rose-700 text-[11px]">95% Match</span>
+              </div>
+              <div class="flex items-center justify-between bg-white p-2 rounded-xl border border-slate-200">
+                <span class="text-slate-700 font-bold flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span> Secondary: <strong id="infer-secondary" class="text-slate-900">Nitrogen Yellowing</strong>
+                </span>
+                <span id="infer-secondary-prob" class="font-bold text-amber-700 text-[11px]">64% Match</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] text-slate-500 font-medium">Auto-saves picture & sends Telegram alert</span>
+              <button onclick="captureCurrentIncident()" class="flex items-center gap-1.5 text-xs font-black text-white bg-sky-600 hover:bg-sky-700 px-3.5 py-1.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                <span>📱 Send to Telegram</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Combined Multi-Cure Recipe -->
+          <div class="mt-3.5 space-y-1.5">
+            <p class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-600"></i>
+              Combined Multi-Cure Prescription:
+            </p>
+            <p id="ai-mitigation" class="text-xs text-slate-800 bg-slate-50 border border-slate-200 p-3 rounded-xl leading-relaxed font-medium">
+              Spray Copper Oxychloride (3g/L) for Blight + mix 10g Urea in 1L water for leaf nitrogen boost.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 font-medium">
+          <span>AI Vision Engine: <strong class="text-emerald-700 font-bold">Multi-Class Active</strong></span>
+          <span>Latency: <strong class="text-slate-700 font-bold">14.2 ms</strong></span>
+        </div>
+      </div>
+
+      <!-- PANEL 2: SAVED PLANT PROBLEMS & PICTURE GALLERY -->
+      <div id="panel-incidents" class="awesome-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
+                <i data-lucide="image" class="w-4 h-4"></i>
+              </div>
+              <h2 class="text-sm font-black text-slate-900 uppercase tracking-wide">
+                Saved Plant Pictures & History
+              </h2>
+            </div>
+            <span id="incident-count-badge" class="text-[10px] bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold">
+              3 Saved Photos
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-500 mt-2 font-medium">
+            Saved pictures with damage ROI bounding boxes and field condition context sent to farmer:
+          </p>
+
+          <!-- Scrollable Incident Picture Cards Container -->
+          <div id="incidents-container" class="custom-scroll mt-3 space-y-3 max-h-[560px] overflow-y-auto pr-1">
+            <!-- Injected with captured photos by JavaScript -->
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span class="flex items-center gap-1">
+            <i data-lucide="send" class="w-3.5 h-3.5 text-sky-600"></i> Telegram: <strong class="text-slate-800" id="audit-farmer-tag">@jakeernabi</strong>
+          </span>
+          <button onclick="clearIncidentLogs()" class="text-slate-400 hover:text-rose-600 text-xs font-bold underline cursor-pointer">
+            Clear History
+          </button>
+        </div>
+      </div>
+
+      <!-- PANEL 3: SOIL FOOD & FERTILIZER (NPK) -->
+      <div id="panel-npk" class="awesome-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                <i data-lucide="flask-conical" class="w-4 h-4"></i>
+              </div>
+              <h2 class="text-sm font-black text-slate-900 uppercase tracking-wide">
+                Soil Food & Fertilizer (NPK)
+              </h2>
+            </div>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-bold">Soil Sensor</span>
+          </div>
+
+          <!-- NPK 3 Pillars -->
+          <div class="grid grid-cols-3 gap-3 mt-4 text-center">
+            
+            <!-- Nitrogen -->
+            <div class="bg-sky-50/80 border border-sky-100 p-3 rounded-2xl shadow-sm">
+              <span class="text-xs font-black text-sky-800">Nitrogen</span>
+              <p class="text-[10px] text-sky-600 font-bold">(N)</p>
+              <h3 id="val-n" class="text-2xl font-black text-sky-950 mt-0.5">52</h3>
+              <p class="text-[10px] text-emerald-600 font-bold">Good Level</p>
+              <div class="w-full bg-sky-200/70 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="bar-n" class="bg-sky-600 h-full rounded-full" style="width: 55%"></div>
+              </div>
+            </div>
+
+            <!-- Phosphorus -->
+            <div class="bg-amber-50/80 border border-amber-100 p-3 rounded-2xl shadow-sm">
+              <span class="text-xs font-black text-amber-800">Phosphorus</span>
+              <p class="text-[10px] text-amber-600 font-bold">(P)</p>
+              <h3 id="val-p" class="text-2xl font-black text-amber-950 mt-0.5">26</h3>
+              <p class="text-[10px] text-amber-600 font-bold">Medium Level</p>
+              <div class="w-full bg-amber-200/70 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="bar-p" class="bg-amber-500 h-full rounded-full" style="width: 42%"></div>
+              </div>
+            </div>
+
+            <!-- Potassium -->
+            <div class="bg-emerald-50/80 border border-emerald-100 p-3 rounded-2xl shadow-sm">
+              <span class="text-xs font-black text-emerald-800">Potassium</span>
+              <p class="text-[10px] text-emerald-600 font-bold">(K)</p>
+              <h3 id="val-k" class="text-2xl font-black text-emerald-950 mt-0.5">194</h3>
+              <p class="text-[10px] text-emerald-600 font-bold">Strong Level</p>
+              <div class="w-full bg-emerald-200/70 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="bar-k" class="bg-emerald-500 h-full rounded-full" style="width: 78%"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Soil Quality / pH -->
+          <div class="mt-4 bg-white/90 border border-slate-200 p-3 rounded-2xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+              <span class="text-xs font-bold text-slate-700">Soil Quality Score:</span>
+            </div>
+            <strong id="val-ph" class="text-sm font-black text-emerald-700">Healthy & Balanced (pH 6.8)</strong>
+          </div>
+
+          <p id="npk-advisory-text" class="text-xs text-slate-700 leading-relaxed bg-emerald-50/60 p-3 rounded-2xl border border-emerald-100 mt-3 font-medium">
+            Your soil nutrients are well balanced for optimal growth. No extra chemical fertilizer is needed today.
+          </p>
+
+          <!-- Micronutrients & Organic Soil Bio-Health -->
+          <div class="mt-3.5 pt-3 border-t border-slate-100 space-y-2">
+            <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+              Secondary Micronutrients & Bio-Condition:
+            </h4>
+            <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+              <div class="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                <span class="text-slate-500 block text-[10px]">Zinc (Zn)</span>
+                <strong class="text-emerald-700 font-bold">1.4 ppm</strong>
+                <span class="text-[9px] text-slate-400 block font-medium">Optimal</span>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                <span class="text-slate-500 block text-[10px]">Boron (B)</span>
+                <strong class="text-emerald-700 font-bold">0.8 ppm</strong>
+                <span class="text-[9px] text-slate-400 block font-medium">Adequate</span>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                <span class="text-slate-500 block text-[10px]">Organic Carbon</span>
+                <strong class="text-sky-700 font-bold">0.68%</strong>
+                <span class="text-[9px] text-slate-400 block font-medium">Rich Humus</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Soil Management Guidance -->
+          <div class="mt-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl text-[11px] text-slate-700 space-y-1">
+            <strong class="text-emerald-950 flex items-center gap-1">
+              <i data-lucide="leaf" class="w-3.5 h-3.5 text-emerald-600"></i> Organic Fertility Schedule:
+            </strong>
+            <p class="leading-relaxed">
+              Incorporate 2 tons of decomposed Farm Yard Manure (FYM) or vermicompost per acre before flowering. Maintain soil organic mulching to prevent moisture loss.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between font-medium">
+          <span>Soil Condition: <strong class="text-emerald-700 font-bold">Healthy & Ready</strong></span>
+          <span>Sensor: <strong class="text-slate-800">Automatic (Modbus RTU)</strong></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= FULL WIDTH: HISTORY GRAPH & WATER REQUIREMENT ================= -->
+    <div id="sec-chart" class="awesome-card p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-100 gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 bg-sky-50 text-sky-600 rounded-xl border border-sky-100">
+            <i data-lucide="line-chart" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-black text-slate-900 uppercase tracking-wide">
+              Live Sensor Telemetry Stream (IoT Diurnal Simulation)
+            </h2>
+            <p class="text-xs text-slate-500 font-medium">Real-time streaming 1.0Hz soil wetness vs. ambient heat with PID pump feedback</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-xl font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Stream Rate: 1.0 packet/sec</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="mt-4 h-72 sm:h-80 relative">
+        <canvas id="telemetryChart"></canvas>
+      </div>
+
+      <!-- Water Requirement Footer -->
+      <div class="mt-4 pt-3.5 border-t border-slate-100 text-xs text-slate-600 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="flex items-center gap-1.5 font-bold">
+            <span>Water Evaporation (ET₀):</span>
+            <strong id="val-et0" class="text-sky-700 text-sm">3.4 mm / day</strong>
+          </div>
+          <span class="text-slate-300">|</span>
+          <div class="flex items-center gap-1.5 font-bold">
+            <span>Today's Total Water Needed:</span>
+            <strong id="val-deficit" class="text-emerald-700 text-sm">~1,850 Litres / acre</strong>
+          </div>
+        </div>
+        <span class="text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl font-bold">
+          ⚡ 30% Water Saved with Automatic Motor Control
+        </span>
+      </div>
+    </div>
+
+    <!-- ================= BOTTOM SYSTEM STATUS BAR ================= -->
+    <div class="awesome-card p-4 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-600">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="flex items-center gap-1.5 text-slate-800">
+          <i data-lucide="battery-charging" class="w-4 h-4 text-emerald-600"></i>
+          Solar LiFePO4 Battery: <strong id="val-battery" class="text-emerald-700 font-bold">94% Charged (13.2V)</strong>
+        </span>
+        <span class="text-slate-300">|</span>
+        <span class="flex items-center gap-1.5">
+          <i data-lucide="wifi" class="w-4 h-4 text-sky-600"></i>
+          Wireless Sensor Range: <strong class="text-slate-800">LoRa 868MHz (-78dBm)</strong>
+        </span>
+        <span class="text-slate-300">|</span>
+        <span class="flex items-center gap-1.5">
+          <i data-lucide="send" class="w-4 h-4 text-sky-600"></i>
+          Alert Channel: <strong class="text-sky-600 font-bold">TELEGRAM (@jakeernabi)</strong>
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span class="text-emerald-800 font-bold">Autonomous Multi-Effect Protection Active</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= ALL-INDIA LIVE PLACE & VILLAGE SEARCH MODAL ================= -->
+  <div id="search-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="awesome-card max-w-lg w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 bg-sky-100 text-sky-700 rounded-xl">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900">Find Any Indian City, Village or Mandal</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Real-time live search across all states in India</p>
+          </div>
+        </div>
+        <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="relative">
+          <input type="text" id="village-search-input" oninput="handleVillageSearch(event)" placeholder="Type any village, mandal, or town in India (e.g. Tenali, Siddipet, Kaza, Sirsa, Nashik)..." class="w-full bg-slate-50 border border-slate-300 focus:border-sky-500 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 font-bold focus:outline-none" />
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+        </div>
+
+        <!-- Quick Agricultural Hub Pills -->
+        <div class="flex items-center gap-1.5 flex-wrap text-[10px] font-bold">
+          <span class="text-slate-400">Quick:</span>
+          <button onclick="selectPresetLocation('guntur')" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 text-slate-700 rounded-lg cursor-pointer">Guntur (AP)</button>
+          <button onclick="selectPresetLocation('warangal')" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 text-slate-700 rounded-lg cursor-pointer">Warangal (TS)</button>
+          <button onclick="selectPresetLocation('nizamabad')" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 text-slate-700 rounded-lg cursor-pointer">Nizamabad (TS)</button>
+          <button onclick="selectPresetLocation('nashik')" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 text-slate-700 rounded-lg cursor-pointer">Nashik (MH)</button>
+          <button onclick="selectPresetLocation('ludhiana')" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 text-slate-700 rounded-lg cursor-pointer">Ludhiana (PB)</button>
+          <button onclick="selectPresetLocation('thanjavur')" class="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 text-slate-700 rounded-lg cursor-pointer">Thanjavur (TN)</button>
+        </div>
+
+        <!-- Search Results Dropdown List -->
+        <div id="search-results-list" class="custom-scroll max-h-60 overflow-y-auto space-y-1.5 border border-slate-100 rounded-2xl p-1 bg-slate-50/50">
+          <div class="text-center py-6 text-xs text-slate-400">
+            Type your farm's village, mandal, or town name above.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FARMER PROFILE & JWT AUTH MODAL ================= -->
+  <div id="farmer-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="awesome-card max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 bg-sky-100 text-sky-700 rounded-xl">
+            <i data-lucide="user-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900">Farmer Identity & WhatsApp Profile</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Custom secure token for storing incidents</p>
+          </div>
+        </div>
+        <button onclick="closeFarmerAuthModal()" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Farmer Full Name:</label>
+          <input type="text" id="modal-farmer-name" value="Jack" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-sky-500" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Active Farm Plot / Location Code:</label>
+          <input type="text" id="modal-farmer-id" value="AGRI-TEL-084" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono font-bold focus:outline-none focus:border-sky-500" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Farmer WhatsApp Number (For Alerts):</label>
+          <input type="text" id="modal-farmer-phone" value="+919494107691" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono font-bold focus:outline-none focus:border-emerald-500" />
+        </div>
+        <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 text-[11px] space-y-1 font-mono">
+          <span class="text-slate-500 block font-sans font-bold">Active JWT Token (HMAC-SHA256):</span>
+          <p id="jwt-token-display" class="text-sky-800 break-all select-all font-semibold">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmYXJtZXJJRCI6IkFHUkktVEVMLTA4NCIsIm5hbWUiOiJKYWNrIn0.simulated_jwt_signature</p>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="closeFarmerAuthModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs cursor-pointer">Cancel</button>
+        <button onclick="saveFarmerProfile()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-xs shadow cursor-pointer">Save & Update Token</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CALLMEBOT TELEGRAM ALERT GATEWAY MODAL ================= -->
+  <div id="whatsapp-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="awesome-card max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 bg-sky-500/15 text-sky-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="send" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900">CallMeBot Telegram Gateway</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Instant Background Telegram Alerts</p>
+          </div>
+        </div>
+        <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Telegram Target Username:</label>
+          <input type="text" id="whatsapp-number-input" value="@jakeernabi" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs font-bold focus:outline-none focus:border-sky-500" />
+          <p class="text-[10px] text-slate-400 mt-0.5">CallMeBot recipient username</p>
+        </div>
+
+        <div class="p-3 bg-sky-50 rounded-xl border border-sky-100 text-[11px] text-sky-950 space-y-1">
+          <strong class="flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-sky-600"></i> Automated Telegram Delivery:</strong>
+          <p class="text-slate-600 font-medium leading-relaxed">
+            All farm alerts, moisture warnings, and AI crop diagnoses are automatically delivered in the background to Telegram (<strong class="text-sky-800">@jakeernabi</strong>) via the CallMeBot API.
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-between items-center">
+        <button onclick="sendTestWhatsAppMessage()" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-xs shadow flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i> Send Test Telegram Alert
+        </button>
+        <button onclick="closeWhatsAppModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs cursor-pointer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PRINTABLE OFFICIAL FARM HEALTH REPORT MODAL ================= -->
+  <div id="report-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-3xl w-full rounded-3xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+      
+      <!-- Modal Top Action Header (hidden during print) -->
+      <div class="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between no-print shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-sky-500/20 text-sky-400 rounded-xl border border-sky-500/30">
+            <i data-lucide="printer" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black tracking-tight">AgriPulse Official Farm Health Report</h3>
+            <p class="text-[11px] text-slate-400">Complete agronomic diagnostic, sensor telemetry & incident summary</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="triggerPrintReport()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-black text-xs shadow-md shadow-emerald-500/25 flex items-center gap-1.5 transition-all transform active:scale-95 cursor-pointer">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Print / Save as PDF</span>
+          </button>
+          <button onclick="closePrintReportModal()" class="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Printable Report Document Area -->
+      <div id="printable-report-area" class="p-6 sm:p-8 overflow-y-auto custom-scroll space-y-6 text-slate-900 bg-white">
+        
+        <!-- Document Letterhead -->
+        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-5">
+          <div class="flex items-center gap-3.5">
+            <div class="p-3 bg-sky-600 text-white rounded-2xl">
+              <i data-lucide="sprout" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-black tracking-tight text-slate-900">AgriPulse Pro</h1>
+              <p class="text-xs font-bold text-sky-700 uppercase tracking-wider">Autonomous Smart Farm Diagnostic Report</p>
+            </div>
+          </div>
+          <div class="text-right text-xs">
+            <p class="font-mono font-bold text-slate-500">Report ID: <span class="text-slate-900">RPT-2026-AGRI</span></p>
+            <p id="rep-datetime" class="font-bold text-slate-700 mt-0.5">Sep 02, 2026</p>
+            <span class="inline-block mt-1 text-[10px] bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded-full">STATUS: VERIFIED</span>
+          </div>
+        </div>
+
+        <!-- Section 1: Farmer & Field Details -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+          <div>
+            <span class="text-slate-500 font-bold block">Farmer Name:</span>
+            <strong id="rep-farmer-name" class="text-slate-900 text-sm">Jack</strong>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">Farm Plot Code:</span>
+            <strong id="rep-farmer-id" class="font-mono text-slate-900 text-sm">AGRI-TEL-084</strong>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">Active Location:</span>
+            <strong id="rep-location" class="text-slate-900">Hyderabad, TS</strong>
+          </div>
+          <div>
+            <span class="text-slate-500 font-bold block">GPS Coordinates:</span>
+            <strong id="rep-coords" class="font-mono text-slate-900">17.385°N, 78.487°E</strong>
+          </div>
+        </div>
+
+        <!-- Section 2: Crop Health Assessment & AI Diagnosis -->
+        <div class="border border-slate-200 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 class="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+              <i data-lucide="shield-alert" class="w-4 h-4 text-rose-500"></i> AI Crop Health & Vision Diagnosis
+            </h3>
+            <span id="rep-conf" class="text-xs font-black bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full">95% Confidence</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-slate-500 font-bold block">Crop Under Inspection:</span>
+              <strong id="rep-crop" class="text-sm font-black text-slate-900">Tomato Plant (Flowering Stage)</strong>
+            </div>
+            <div>
+              <span class="text-slate-500 font-bold block">Primary AI Diagnosis:</span>
+              <strong id="rep-diagnosis" class="text-sm font-black text-rose-600">Early Blight + N-Deficiency</strong>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/80 border border-amber-200 p-3.5 rounded-xl text-xs space-y-1">
+            <span class="text-amber-900 font-black block">Agronomist Treatment & Prescription:</span>
+            <p id="rep-prescription" class="text-slate-800 leading-relaxed font-medium">
+              Spray Copper Oxychloride (3g/L) for Blight + mix 10g Urea in 1L water for leaf nitrogen boost.
+            </p>
+          </div>
+        </div>
+
+        <!-- Section 3: Sensor Telemetry Metrics -->
+        <div class="border border-slate-200 rounded-2xl p-5 space-y-3">
+          <h3 class="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-4 h-4 text-sky-500"></i> Live Microclimate & Soil Telemetry
+          </h3>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+            <div class="p-3 bg-sky-50 rounded-xl border border-sky-100">
+              <span class="text-slate-500 font-bold block">Soil Wetness</span>
+              <strong id="rep-moisture" class="text-lg font-black text-sky-700">26.3%</strong>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-100">
+              <span class="text-slate-500 font-bold block">Field Temperature</span>
+              <strong id="rep-temp" class="text-lg font-black text-amber-700">31.5°C</strong>
+            </div>
+            <div class="p-3 bg-sky-50 rounded-xl border border-sky-100">
+              <span class="text-slate-500 font-bold block">Air Humidity</span>
+              <strong id="rep-humidity" class="text-lg font-black text-sky-700">65%</strong>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+              <span class="text-slate-500 font-bold block">Soil Quality Score</span>
+              <strong id="rep-ph" class="text-lg font-black text-emerald-700">pH 6.8</strong>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-500 font-bold block">Nutrient Pillars (NPK):</span>
+              <strong id="rep-npk" class="text-slate-900">N: 52 | P: 26 | K: 194 ppm</strong>
+            </div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-500 font-bold block">Evapotranspiration (ET₀):</span>
+              <strong id="rep-et0" class="text-slate-900">3.4 mm/day</strong>
+            </div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-500 font-bold block">Water Motor Actuator:</span>
+              <strong id="rep-motor" class="text-emerald-700">RUNNING (Active Irrigation)</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Recent Problem History -->
+        <div class="border border-slate-200 rounded-2xl p-5 space-y-3">
+          <h3 class="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+            <i data-lucide="clock" class="w-4 h-4 text-indigo-500"></i> Recent Incident Log
+          </h3>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-500 font-bold">
+                  <th class="pb-2">Time</th>
+                  <th class="pb-2">Crop</th>
+                  <th class="pb-2">Detected Issue</th>
+                  <th class="pb-2">Prescription</th>
+                </tr>
+              </thead>
+              <tbody id="rep-incidents-list" class="divide-y divide-slate-100 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Report Footer -->
+        <div class="pt-4 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-400 font-mono">
+          <span>AgriPulse Pro • Edge AI Farm Infrastructure</span>
+          <span>Verified by Autonomous Vision Core</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+
+    // Chart.js Setup
+    const ctx = document.getElementById('telemetryChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['-30s', '-25s', '-20s', '-15s', '-10s', '-5s', 'Now'],
+        datasets: [
+          {
+            label: 'Soil Moisture (%)',
+            data: [28, 27, 26, 25, 24, 25.5, 26.3],
+            borderColor: '#0284c7',
+            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointBackgroundColor: '#0284c7'
+          },
+          {
+            label: 'Temperature (°C)',
+            data: [29.5, 30.0, 30.2, 30.8, 31.1, 31.3, 31.5],
+            borderColor: '#f59e0b',
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointBackgroundColor: '#f59e0b'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: '#334155', font: { size: 11, weight: '700' }, boxWidth: 12 }
+          },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { size: 12, weight: 'bold' },
+            bodyFont: { size: 12 },
+            cornerRadius: 8
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', font: { size: 10 } },
+            grid: { color: 'rgba(226, 232, 240, 0.8)' }
+          },
+          y: {
+            ticks: { color: '#64748b', font: { size: 10 } },
+            grid: { color: 'rgba(226, 232, 240, 0.8)' }
+          }
+        }
+      }
+    });
+
+    // Farmer Profile & JWT State
+    let farmerProfile = {
+      name: "Jack",
+      id: "AGRI-TEL-084",
+      phone: "+919494107691",
+      jwtToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmYXJtZXJJRCI6IkFHUkktVEVMLTA4NCIsIm5hbWUiOiJKYWNrIn0.simulated_jwt_signature"
+    };
+
+    // ================= CALLMEBOT TELEGRAM INTEGRATION =================
+    const CALLMEBOT_USER = "@jakeernabi";
+
+    function sendWhatsAppAlert(messageText, isUserClick = false) {
+      const formattedMessage = encodeURIComponent(`🌱 AgriPulse Alert: ${messageText} (Plot: ${farmerProfile.id})`);
+      const url = `https://api.callmebot.com/text.php?user=${CALLMEBOT_USER}&text=${formattedMessage}`;
+
+      // Automatically dispatches the alert in the background to your Telegram
+      fetch(url, { mode: 'no-cors' })
+        .then(response => {
+          console.log('CallMeBot Telegram alert dispatched successfully!');
+        })
+        .catch(error => {
+          console.error('Network error sending CallMeBot message:', error);
+        });
+
+      // Display the Onscreen UI Toast Notification
+      const toast = document.getElementById('sms-toast');
+      if (toast) {
+        document.getElementById('sms-toast-to').textContent = `Telegram (@jakeernabi) Sent`;
+        document.getElementById('sms-toast-msg').textContent = messageText.length > 95 ? messageText.substring(0, 95) + '...' : messageText;
+        document.getElementById('toast-disease-name').textContent = "Automated Telegram Dispatched";
+        document.getElementById('toast-photo-thumb').textContent = "🤖";
+        
+        toast.classList.remove('hidden');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 5500);
+      }
+    }
+
+    // Keep aliases active so the rest of your dashboard works seamlessly
+    function sendTelegramAlert(messageText) { return sendWhatsAppAlert(messageText); }
+    function sendTwilioAlert(messageText) { return sendWhatsAppAlert(messageText); }
+
+    // Regional Farm Profiles with Dominant Crop Adaptation
+    const REGIONAL_FARM_PROFILES = {
+      "hyderabad": { name: "Hyderabad (Telangana)", lat: 17.3850, lon: 78.4867, defaultCrop: "tomato" },
+      "guntur": { name: "Guntur (Chilli & Cotton Belt)", lat: 16.3067, lon: 80.4365, defaultCrop: "chilli" },
+      "warangal": { name: "Warangal (Cotton Agronomy)", lat: 17.9689, lon: 79.5941, defaultCrop: "cotton" },
+      "nizamabad": { name: "Nizamabad (Paddy Basin)", lat: 18.6725, lon: 78.0941, defaultCrop: "paddy" },
+      "nashik": { name: "Nashik (Onion & Grapes Capital)", lat: 19.9975, lon: 73.7898, defaultCrop: "onion" },
+      "ludhiana": { name: "Ludhiana (Wheat & Rice Punjab)", lat: 30.9010, lon: 75.8573, defaultCrop: "wheat" },
+      "thanjavur": { name: "Thanjavur (Rice Delta)", lat: 10.7870, lon: 79.1378, defaultCrop: "paddy" }
+    };
+
+    let activeLocation = { name: "Hyderabad, TS", lat: 17.3850, lon: 78.4867 };
+
+    // ================= 12 AGRICULTURAL CROPS REPOSITORY =================
+    const CROP_CATALOG = {
+      tomato: {
+        name: "Tomato Plant",
+        stage: "Tomato Plant • Flowering Stage",
+        diseases: [
+          {
+            disease: "Early Blight + N-Deficiency",
+            secondary: "Nitrogen Chlorosis",
+            secondaryProb: 64,
+            isNegative: true,
+            severity: "Needs Spray & Fertilizer",
+            confidence: 95.2,
+            desc: "Dark brown circular spots on lower leaves with yellow tips. Caused by warm wet air and nitrogen food depletion.",
+            mitigation: "Spray Copper Oxychloride (3g/L) for Blight + mix 10g Urea in 1L water for foliar nitrogen boost.",
+            photoColor: "from-amber-600/30 to-rose-600/30",
+            photoIcon: "🍂",
+            vernacular: {
+              en: "Advice: Early Blight Leaf Spots and Nitrogen Food Deficiency detected. Spray Copper Oxychloride (3g/L) + Foliar Nitrogen.",
+              te: "సలహా: టమోటా ఆకు మచ్చ తెగులు మరియు నత్రజని లోపం. కాపర్ ఆక్సిక్లోరైడ్ 3 గ్రాములు + యూరియా ద్రావణం పిచికారీ చేయండి.",
+              hi: "सलाह: टमाटर में झुलसा रोग और नाइट्रोजन की कमी। कॉपर ऑक्सीक्लोराइड 3 ग्राम/लीटर और पर्णीय यूरिया का छिड़काव करें।",
+              ta: "ஆலோசனை: தக்காளி இலைக்கருகல் மற்றும் தழைச்சத்து குறைபாடு. காப்பர் ஆக்ஸிகுளோரைடு தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಟೊಮೆಟೊ ಎಲೆ ಮಚ್ಚೆ ರೋಗ ಮತ್ತು ಸಾರಜನಕ ಕೊರತೆ. ತಾಮ್ರದ ಆಕ್ಸಿಕ್ಲೋರೈಡ್ ಸಿಂಪಡಿಸಿ."
+            }
+          },
+          {
+            disease: "Healthy Crop Leaves",
+            secondary: "Optimal Chlorophyll",
+            secondaryProb: 94,
+            isNegative: false,
+            severity: "Healthy",
+            confidence: 98.4,
+            desc: "Leaves are fresh and green. No bugs or plant diseases found today.",
+            mitigation: "Canopy is vigorous. Maintain normal drip watering schedule.",
+            photoColor: "from-emerald-600/30 to-teal-600/30",
+            photoIcon: "🌿",
+            vernacular: {
+              en: "Advice: Crop is healthy and strong. Maintain your regular drip watering schedule.",
+              te: "సలహా: పంట చాలా ఆరోగ్యంగా ఉంది. సాధారణంగా నీరు అందించడం కొనసాగించండి.",
+              hi: "सलाह: फसल पूरी तरह स्वस्थ है। नियमित पानी और पोषण जारी रखें।",
+              ta: "ஆலோசனை: பயிர் நலமாக உள்ளது. வழக்கம்போல் நீர் பாய்ச்சவும்.",
+              kn: "ಸಲಹೆ: ಬೆಳೆ ಆರೋಗ್ಯಕರವಾಗಿದೆ. ಎಂದಿನಂತೆ ನೀರುಣಿಸುವುದು ಮುಂದುವರಿಸಿ."
+            }
+          }
+        ]
+      },
+      paddy: {
+        name: "Rice / Paddy",
+        stage: "Rice Crop • Tillering Stage",
+        diseases: [
+          {
+            disease: "Rice Blast + Brown Plant Hopper",
+            secondary: "Stem Borer Nymphs",
+            secondaryProb: 58,
+            isNegative: true,
+            severity: "Needs Urgent Spray",
+            confidence: 94.6,
+            desc: "Diamond-shaped blast fungal lesions on leaf blades plus insect vector puncture marks at leaf base.",
+            mitigation: "Spray Tricyclazole (0.6g/L) for Blast + Pymetrozine (0.6g/L) for Hoppers.",
+            photoColor: "from-amber-600/30 to-yellow-600/30",
+            photoIcon: "🌾",
+            vernacular: {
+              en: "Advice: Rice Blast fungal spots and Plant Hopper insects found. Spray Tricyclazole (0.6g/L) + Pymetrozine (0.6g/L).",
+              te: "సలహా: వరిలో అగ్గి తెగులు మరియు సుడి దోమ. ట్రైసైక్లాజోల్ 0.6 గ్రాములు + పైమెట్రోజైన్ కలిపి పిచికారీ చేయండి.",
+              hi: "सलाह: धान में झोंका (ब्लास्ट) और भूरा माहू कीट। ट्राइसाइक्लाजोल 0.6 ग्राम + पाइमेट्रोज़िन का छिड़काव करें।",
+              ta: "ஆலோசனை: நெல் குலை நோய் மற்றும் தத்துப்பூச்சி. ட்ரைசைக்ளசோல் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಭತ್ತದ ಬ್ಲಾಸ್ಟ್ ರೋಗ ಮತ್ತು ಜಿಗಿಹುಳು. ಟ್ರೈಸೈಕ್ಲಾಜೋಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      cotton: {
+        name: "Cotton",
+        stage: "Cotton Crop • Boll Stage",
+        diseases: [
+          {
+            disease: "Pink Bollworm + Whitefly Stress",
+            secondary: "Sucking Pest Nymphs",
+            secondaryProb: 71,
+            isNegative: true,
+            severity: "Action Needed",
+            confidence: 92.8,
+            desc: "Rosetted flower buds from pink bollworm larvae combined with whitefly honeydew secretion on leaf undersides.",
+            mitigation: "Set 5 pheromone traps/acre. Spray Emamectin Benzoate (0.4g/L) + Diafenthiuron (1g/L).",
+            photoColor: "from-rose-600/30 to-red-600/30",
+            photoIcon: "🐛",
+            vernacular: {
+              en: "Advice: Pink Bollworm and Whitefly pests detected. Set 5 pheromone traps and spray Emamectin Benzoate (0.4g/L).",
+              te: "సలహా: పత్తిలో గులాబీ రంగు పురుగు మరియు తెల్లదోమ. ఎకరాకు 5 లింగాకర్షక బుట్టలు అమర్చి ఎమామెక్టిన్ బెంజోయేట్ పిచికారీ చేయండి.",
+              hi: "सलाह: कपास में गुलाबी सुंडी और सफेद मक्खी। 5 फेरोमोन ट्रैप लगाएं व एमामेक्टिन बेंजोएट का छिड़काव करें।",
+              ta: "ஆலோசனை: பருத்தி காய் புழு மற்றும் வெள்ளை ஈ. இனக்கவர்ச்சி பொறிகள் வைக்கவும்.",
+              kn: "ಸಲಹೆ: ಹತ್ತಿ ಕಾಯಿ ಹುಳು ಮತ್ತು ಬಿಳಿ ನೊಣ. ಮೋಹಕ ಬಲೆಗಳನ್ನು ಇರಿಸಿ."
+            }
+          }
+        ]
+      },
+      chilli: {
+        name: "Chilli",
+        stage: "Chilli Crop • Pod Stage",
+        diseases: [
+          {
+            disease: "Chilli Leaf Curl + Mite Damage",
+            secondary: "Thrips & Broad Mites",
+            secondaryProb: 76,
+            isNegative: true,
+            severity: "Needs Spray",
+            confidence: 93.4,
+            desc: "Upward boat-shaped curling and downward crinkling caused by mixed thrips and yellow mite infestation.",
+            mitigation: "Spray Fipronil (2ml/L) + Spiromesifen (1ml/L) mixed with Neem Oil (2ml/L).",
+            photoColor: "from-orange-600/30 to-amber-600/30",
+            photoIcon: "🌶️",
+            vernacular: {
+              en: "Advice: Chilli Leaf Curl and Yellow Mites found. Spray Fipronil (2ml/L) + Spiromesifen (1ml/L) + Neem Oil (2ml/L).",
+              te: "సలహా: మిరపలో పై ముడత మరియు నల్లి పురుగులు. ఫిప్రోనిల్ 2ml + స్పైరోమెసిఫెన్ 1ml మరియు వేపనూనె కలిపి పిచికారీ చేయండి.",
+              hi: "सलाह: मिर्च में पत्ती मरोड़ और माइट्स कीट। फिप्रोनिल 2 मिली + स्पाइरोमेसिफेन 1 मिली मिलाकर छिड़कें।",
+              ta: "ஆலோசனை: மிளகாய் இலைச்சுருட்டல் மற்றும் சிலந்திப் பூச்சி. பிப்ரோனில் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಮೆಣಸಿನಕಾಯಿ ಎಲೆ ಮುದುರು ಮತ್ತು ನುಸಿ ರೋಗ. ಫಿಪ್ರೋನಿಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      maize: {
+        name: "Maize / Corn",
+        stage: "Maize • Knee-High Vegetative Stage",
+        diseases: [
+          {
+            disease: "Fall Armyworm + Turcicum Leaf Blight",
+            secondary: "Whorl Feeding Larvae",
+            secondaryProb: 82,
+            isNegative: true,
+            severity: "Critical Action",
+            confidence: 96.1,
+            desc: "Pin holes and window pane feeding damage in central leaf whorl with elongated cigar-shaped fungal leaf blights.",
+            mitigation: "Apply Chlorantraniliprole 18.5 SC (0.4ml/L) in central whorls + spray Mancozeb (2.5g/L).",
+            photoColor: "from-yellow-600/30 to-amber-600/30",
+            photoIcon: "🌽",
+            vernacular: {
+              en: "Advice: Fall Armyworm pest and Leaf Blight found in maize. Apply Chlorantraniliprole (0.4ml/L) in whorls.",
+              te: "సలహా: మొక్కజొన్నలో కత్తెర పురుగు మరియు ఆకు ఎండు తెగులు. క్లోరాంట్రానిలిప్రోల్ 0.4 ml సుడులలో పిచికారీ చేయండి.",
+              hi: "सलाह: मक्का में फॉल आर्मीवर्म और पत्ती झुलसा। क्लोरेंट्रानिलीप्रोल (0.4 मिली/ली) का छिड़काव करें।",
+              ta: "ஆலோசனை: மக்காச்சோள படைப்புழு தாக்குதல். குளோரான்ட்ரனிலிப்ரோல் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಮೆಕ್ಕೆಜೋಳದ ಲದ್ದಿಹುಳು. ಕ್ಲೋರಾಂಟ್ರಾನಿಲಿಪ್ರೋಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      onion: {
+        name: "Onion",
+        stage: "Onion • Bulb Enlargement Stage",
+        diseases: [
+          {
+            disease: "Purple Blotch + Onion Thrips",
+            secondary: "Silver Leaf Scarring",
+            secondaryProb: 68,
+            isNegative: true,
+            severity: "Needs Spray",
+            confidence: 93.8,
+            desc: "Sunken purple-brown oval spots on leaves with silvery white streaks caused by sap-sucking thrips.",
+            mitigation: "Spray Tebuconazole + Trifloxystrobin (0.7g/L) mixed with Dimethoate (1.7ml/L).",
+            photoColor: "from-purple-600/30 to-fuchsia-600/30",
+            photoIcon: "🧅",
+            vernacular: {
+              en: "Advice: Purple Blotch and Onion Thrips detected. Spray Tebuconazole + Trifloxystrobin (0.7g/L).",
+              te: "సలహా: ఉల్లిలో ఊదా మచ్చ తెగులు మరియు పేను పురుగులు. టెబుకొనజోల్ + ట్రైఫ్లాక్సిస్ట్రోబిన్ పిచికారీ చేయండి.",
+              hi: "सलाह: प्याज में बैंगनी धब्बा रोग और थ्रिप्स कीट। टेबुकोनाजोल का छिड़काव करें।",
+              ta: "ஆலோசனை: வெங்காய ஊதா புள்ளி நோய். டெபுகோனசோல் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಈರುಳ್ಳಿ ನೇರಳೆ ಚುಕ್ಕೆ ರೋಗ. ಟೆಬುಕೊನಜೋಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      wheat: {
+        name: "Wheat",
+        stage: "Wheat Crop • Booting Stage",
+        diseases: [
+          {
+            disease: "Yellow Rust + Termite Root Stress",
+            secondary: "Pustule Spores",
+            secondaryProb: 62,
+            isNegative: true,
+            severity: "Urgent Fungicide",
+            confidence: 95.0,
+            desc: "Yellow powder stripes on upper leaves caused by cooler morning temperatures and humid canopy air.",
+            mitigation: "Spray Propiconazole 25 EC (1ml/L) immediately. Avoid excess nitrogen fertilizer.",
+            photoColor: "from-amber-500/30 to-yellow-600/30",
+            photoIcon: "🌾",
+            vernacular: {
+              en: "Advice: Yellow Rust stripes detected on wheat leaves. Spray Propiconazole (1ml/L) immediately.",
+              te: "సలహా: గోధుమలో పసుపు కుంకుమ తెగులు. ప్రొపికొనజోల్ 1 ml లీటరు నీటిలో కలిపి పిచికారీ చేయండి.",
+              hi: "सलाह: गेहूं में पीला रतुआ (येलो रस्ट) रोग। प्रोपिकोनाजोल 1 मिली/लीटर का तुरंत छिड़काव करें।",
+              ta: "ஆலோசனை: கோதுமை மஞ்சள் துரு நோய். புரோபிகோனசோல் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಗೋಧಿ ಹಳದಿ ತುಕ್ಕು ರೋಗ. ಪ್ರೊಪಿಕೊನಜೋಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      potato: {
+        name: "Potato",
+        stage: "Potato • Tuber Formation Stage",
+        diseases: [
+          {
+            disease: "Late Blight + Aphid Vector",
+            secondary: "Water-soaked lesions",
+            secondaryProb: 75,
+            isNegative: true,
+            severity: "High Danger",
+            confidence: 97.2,
+            desc: "Water-soaked dark lesions spreading rapidly on leaf margins with white downy growth underneath.",
+            mitigation: "Spray Metalaxyl + Mancozeb (2.5g/L) or Cymoxanil + Mancozeb (3g/L) immediately.",
+            photoColor: "from-stone-600/30 to-rose-600/30",
+            photoIcon: "🥔",
+            vernacular: {
+              en: "Advice: Dangerous Late Blight detected on potato. Spray Metalaxyl + Mancozeb (2.5g/L) at once.",
+              te: "సలహా: బంగాళాదుంపలో తీవ్రమైన లేట్ బ్లైట్ తెగులు. మెటలాక్సిల్ + మాంకోజెబ్ 2.5 గ్రాములు వెంటనే పిచికారీ చేయండి.",
+              hi: "सलाह: आलू में खतरनाक पछेती झुलसा (लेट ब्लाइट)। मेटालेक्सिल + मैंकोजेब (2.5 ग्राम/ली) तुरंत छिड़कें।",
+              ta: "ஆலோசனை: உருளைக்கிழங்கு பின் இலைக்கருகல் நோய். மெட்டாலாக்சில் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಆಲೂಗಡ್ಡೆ ಲೇಟ್ ಬ್ಲೈಟ್ ರೋಗ. ಮೆಟಲಾಕ್ಸಿಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      soybean: {
+        name: "Soybean",
+        stage: "Soybean • Pod Development",
+        diseases: [
+          {
+            disease: "Anthracnose + Yellow Mosaic",
+            secondary: "Whitefly Vector",
+            secondaryProb: 65,
+            isNegative: true,
+            severity: "Needs Treatment",
+            confidence: 93.0,
+            desc: "Irregular reddish brown spots on leaf veins and yellow mosaic discoloration transmitted by whiteflies.",
+            mitigation: "Spray Pyraclostrobin (1ml/L) + Acetamiprid (0.4g/L) for whitefly vector control.",
+            photoColor: "from-amber-600/30 to-emerald-600/30",
+            photoIcon: "🫘",
+            vernacular: {
+              en: "Advice: Anthracnose and Yellow Mosaic found in soybean. Spray Pyraclostrobin + Acetamiprid.",
+              te: "సలహా: సోయాబీన్‌లో ఆంత్రాక్నోస్ మరియు పసుపు మొజాయిక్. పైరాక్లోస్ట్రోబిన్ + ఎసిటామిప్రిడ్ పిచికారీ చేయండి.",
+              hi: "सलाह: सोयाबीन में एन्थ्रेक्नोज और पीला मोज़ेक रोग। पायराक्लोस्ट्रोबिन + एसिटामिप्रिड का छिड़काव करें।",
+              ta: "ஆலோசனை: சோயாபீன் ஆந்த்ராக்னோஸ் நோய். பைராக்ளோஸ்ட்ரோபின் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಸೋಯಾಬೀನ್ ಆಂಥ್ರಾಕ್ನೋಸ್ ರೋಗ. ಪೈರಾಕ್ಲೋಸ್ಟ್ರೋಬಿನ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      grapes: {
+        name: "Grapes",
+        stage: "Grapes • Berry Growth Stage",
+        diseases: [
+          {
+            disease: "Downy Mildew + Powdery Mildew",
+            secondary: "White Fungal Patches",
+            secondaryProb: 78,
+            isNegative: true,
+            severity: "Berry Protection Alert",
+            confidence: 96.5,
+            desc: "Yellow oily spots on leaf surface with dense white cottony fungal growth on lower surface.",
+            mitigation: "Spray Mandipropamid (0.8ml/L) or Azoxystrobin (1ml/L) in early morning hours.",
+            photoColor: "from-violet-600/30 to-purple-600/30",
+            photoIcon: "🍇",
+            vernacular: {
+              en: "Advice: Grape Downy Mildew detected on canopy. Spray Mandipropamid (0.8ml/L) early morning.",
+              te: "సలహా: ద్రాక్షలో డౌనీ మిల్డో తెగులు. మాండిప్రోపమిడ్ 0.8 ml ఉదయాన్నే పిచికారీ చేయండి.",
+              hi: "सलाह: अंगूर में डाउनी मिल्ड्यू (मृदुरोमिल फफूंदी)। मेंडिप्रोपामिड (0.8 मिली/ली) का छिड़काव करें।",
+              ta: "ஆலோசனை: திராட்சை கீழ்நோக்கிய பூஞ்சை காளான். மாண்டிப்ரோபாமிட் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ದ್ರಾಕ್ಷಿ ಡೌನಿ ಮಿಲ್ಡ್ಯೂ ರೋಗ. ಮ್ಯಾಂಡಿಪ್ರೋಪಾಮಿಡ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      mango: {
+        name: "Mango",
+        stage: "Mango • Flowering & Fruit Set",
+        diseases: [
+          {
+            disease: "Powdery Mildew + Mango Hopper",
+            secondary: "Honeydew Blossom Soot",
+            secondaryProb: 73,
+            isNegative: true,
+            severity: "Blossom Shield Required",
+            confidence: 94.2,
+            desc: "Greyish white powdery coating on flower panicles with wedge-shaped hoppers sucking blossom sap.",
+            mitigation: "Spray Hexaconazole (1ml/L) + Thiamethoxam 25 WG (0.3g/L) before fruit drop.",
+            photoColor: "from-amber-500/30 to-orange-600/30",
+            photoIcon: "🥭",
+            vernacular: {
+              en: "Advice: Mango Powdery Mildew and Hoppers detected on flower panicles. Spray Hexaconazole + Thiamethoxam.",
+              te: "సలహా: మామిడిలో బూడిద తెగులు మరియు తేనెమంచు పురుగులు. హెక్సాకొనజోల్ 1ml + థయామిథాక్సమ్ 0.3g పిచికారీ చేయండి.",
+              hi: "सलाह: आम में चूर्णिल आसिता (पाउडरी मिल्ड्यू) और भुनगा कीट। हेक्साकोनाजोल + थायमेथोक्सम छिड़कें।",
+              ta: "ஆலோசனை: மாம்பழ சாம்பல் நோய் மற்றும் தத்துப்பூச்சி. ஹெக்ஸாகோனசோல் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಮಾವಿನ ಬೂದಿ ರೋಗ ಮತ್ತು ಜಿಗಿಹುಳು. ಹೆಕ್ಸಾಕೊನಜೋಲ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      },
+      sugarcane: {
+        name: "Sugarcane",
+        stage: "Sugarcane • Grand Growth Stage",
+        diseases: [
+          {
+            disease: "Red Rot + Woolly Aphid",
+            secondary: "Vascular discoloration",
+            secondaryProb: 69,
+            isNegative: true,
+            severity: "Needs Management",
+            confidence: 95.8,
+            desc: "Third and fourth leaves from top showing yellowing and drying with white woolly patches beneath foliage.",
+            mitigation: "Drench Carbendazim (1g/L) around roots + spray Malathion (2ml/L) for woolly aphids.",
+            photoColor: "from-emerald-600/30 to-red-600/30",
+            photoIcon: "🌿",
+            vernacular: {
+              en: "Advice: Sugarcane Red Rot vascular stress and Woolly Aphids detected. Drench Carbendazim (1g/L).",
+              te: "సలహా: చెరకులో ఎర్ర కుళ్ళు తెగులు మరియు తెల్ల పేను. కార్బండజిమ్ 1 గ్రాము పాదుల వద్ద పోయండి.",
+              hi: "सलाह: गन्ने में लाल सड़न (रेड रॉट) और सफेद माहू। कार्बेन्डाजिम (1 ग्राम/ली) जड़ों में दें।",
+              ta: "ஆலோசனை: கரும்பு செவ்வழுகல் நோய். கார்பென்டாசிம் தெளிக்கவும்.",
+              kn: "ಸಲಹೆ: ಕಬ್ಬಿನ ಕೆಂಪು ಕೊಳೆ ರೋಗ. ಕಾರ್ಬೆಂಡಾಜಿಮ್ ಸಿಂಪಡಿಸಿ."
+            }
+          }
+        ]
+      }
+    };
+
+    // Saved Incidents
+    let savedIncidents = [
+      {
+        id: 1,
+        time: "21:15:10",
+        crop: "Tomato",
+        disease: "Early Blight + N-Deficiency",
+        severity: "Needs Spray & Food",
+        confidence: "95% Match",
+        desc: "Dark brown spots on lower leaves with yellow tips. High humidity (65%) and high soil nutrient depletion.",
+        recommendation: "Spray Copper Oxychloride (3g/L) + mix 10g Urea in 1L water for foliar nitrogen boost.",
+        photoIcon: "🍂",
+        photoColor: "from-amber-500/20 to-rose-500/30 border-amber-300",
+        badgeColor: "bg-amber-100 text-amber-900 border-amber-300"
+      },
+      {
+        id: 2,
+        time: "20:42:00",
+        crop: "Tomato",
+        disease: "Yellowing Leaves (Nitrogen Low)",
+        severity: "Needs Food",
+        confidence: "89% Match",
+        desc: "Bottom older leaves turned light yellow because plant needed extra nitrogen food.",
+        recommendation: "Mix 10 grams of Urea in 1 litre of water and spray on leaves in the morning.",
+        photoIcon: "🌱",
+        photoColor: "from-yellow-500/20 to-amber-500/30 border-yellow-300",
+        badgeColor: "bg-yellow-100 text-yellow-900 border-yellow-300"
+      },
+      {
+        id: 3,
+        time: "19:15:30",
+        crop: "Tomato",
+        disease: "Leaf Spot Bacteria",
+        severity: "Needs Medicine",
+        confidence: "92% Match",
+        desc: "Small dark spots with yellow circles appeared on leaf edges after heavy mist.",
+        recommendation: "Spray Streptocycline (0.5 grams) + Copper Oxychloride (2.5 grams) per litre of water.",
+        photoIcon: "🔬",
+        photoColor: "from-rose-500/20 to-red-500/30 border-rose-300",
+        badgeColor: "bg-rose-100 text-rose-900 border-rose-300"
+      }
+    ];
+
+    let selectedCrop = "tomato";
+    let selectedLang = "te";
+    let selectedModel = "gemini";
+    let currentPayload = null;
+    let localMockTimer = null;
+    let isMockMode = false;
+    let diseaseIndex = 0;
+    let lastLoggedDisease = "";
+    let searchDebounceTimer = null;
+
+    // Water Pump Control State (Fixes Bug: Manual override flag prevents auto loop from turning pump back on!)
+    let telemetryState = {
+      soil_moisture: 26.3,
+      temperature: 31.5,
+      humidity: 65.0,
+      nitrogen: 52,
+      phosphorus: 26,
+      potassium: 194,
+      ph: 6.8,
+      solar: 704,
+      et0: 3.4,
+      deficit: 1850,
+      battery: 13.2,
+      valve_open: true,
+      is_manual_override: false, // Prevents auto-simulation from overriding farmer's manual OFF switch
+      valve_status: "Auto-Watering: Moisture is low"
+    };
+
+    const sendTestTelegramMessage = () => sendTestWhatsAppMessage();
+
+    function openFarmerAuthModal() {
+      document.getElementById('modal-farmer-name').value = farmerProfile.name;
+      document.getElementById('modal-farmer-id').value = farmerProfile.id;
+      document.getElementById('modal-farmer-phone').value = farmerProfile.phone;
+      document.getElementById('farmer-modal').classList.remove('hidden');
+    }
+
+    function closeFarmerAuthModal() {
+      document.getElementById('farmer-modal').classList.add('hidden');
+    }
+
+    function saveFarmerProfile() {
+      farmerProfile.name = document.getElementById('modal-farmer-name').value || "Jack";
+      farmerProfile.id = document.getElementById('modal-farmer-id').value || "AGRI-TEL-084";
+      farmerProfile.phone = document.getElementById('modal-farmer-phone').value || "+919494107691";
+      farmerProfile.jwtToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify({ farmerID: farmerProfile.id, name: farmerProfile.name }))}.simulated_jwt_signature`;
+      
+      document.getElementById('nav-farmer-name').textContent = `Farmer: ${farmerProfile.name}`;
+      document.getElementById('nav-farmer-id').textContent = `Plot: ${farmerProfile.id}`;
+      document.getElementById('audit-farmer-tag').textContent = `${farmerProfile.phone}`;
+      
+      closeFarmerAuthModal();
+      sendTwilioAlert(`Farmer Profile Updated: ${farmerProfile.name} (Plot: ${farmerProfile.id}). SMS Alerts: ${farmerProfile.phone}`);
+    }
+
+    function openWhatsAppModal() {
+      const m = document.getElementById('whatsapp-modal') || document.getElementById('twilio-modal') || document.getElementById('telegram-modal');
+      if (m) m.classList.remove('hidden');
+    }
+    const openTwilioModal = openWhatsAppModal;
+    const openTelegramModal = openWhatsAppModal;
+
+    function closeWhatsAppModal() {
+      const m = document.getElementById('whatsapp-modal') || document.getElementById('twilio-modal') || document.getElementById('telegram-modal');
+      if (m) m.classList.add('hidden');
+    }
+    const closeTwilioModal = closeWhatsAppModal;
+    const closeTelegramModal = closeWhatsAppModal;
+
+    function sendTestWhatsAppMessage() {
+      const numInput = document.getElementById('whatsapp-number-input');
+      const testNum = numInput ? numInput.value.trim() : WHATSAPP_PHONE_NUMBER;
+      sendWhatsAppAlert(`Test Alert: Soil Moisture is 34%, Pump is Active (14.2 L/min). Temperature 28°C. Field status normal. Plot: ${farmerProfile.id} (${farmerProfile.name}).`, true);
+      closeWhatsAppModal();
+    }
+    const sendTestTwilioMessage = sendTestWhatsAppMessage;
+
+    // ================= PRINTABLE FARM HEALTH REPORT FUNCTIONS =================
+    function openPrintReportModal() {
+      const modal = document.getElementById('report-modal');
+      const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      document.getElementById('rep-farmer-name').textContent = farmerProfile.name;
+      document.getElementById('rep-farmer-id').textContent = farmerProfile.id;
+      document.getElementById('rep-location').textContent = activeLocation.name;
+      document.getElementById('rep-coords').textContent = `${activeLocation.lat.toFixed(3)}°N, ${activeLocation.lon.toFixed(3)}°E`;
+      document.getElementById('rep-datetime').textContent = `${dateStr} at ${timeStr}`;
+      document.getElementById('rep-crop').textContent = `${crop.name} (${crop.stage})`;
+      
+      const diag = currentPayload ? currentPayload.ai_diagnostics : {
+        disease: "Early Blight + N-Deficiency",
+        confidence: 95.2,
+        secondary: "Nitrogen Chlorosis",
+        secondaryProb: 64,
+        mitigation: "Spray Copper Oxychloride (3g/L) for Blight + mix 10g Urea in 1L water for foliar nitrogen boost."
+      };
+
+      document.getElementById('rep-diagnosis').textContent = diag.disease;
+      document.getElementById('rep-conf').textContent = `${Math.round(diag.confidence)}% Confidence`;
+      document.getElementById('rep-prescription').textContent = diag.mitigation;
+
+      document.getElementById('rep-moisture').textContent = `${telemetryState.soil_moisture}%`;
+      document.getElementById('rep-temp').textContent = `${telemetryState.temperature}°C`;
+      document.getElementById('rep-humidity').textContent = `${telemetryState.humidity}%`;
+      document.getElementById('rep-npk').textContent = `N: ${telemetryState.nitrogen} | P: ${telemetryState.phosphorus} | K: ${telemetryState.potassium} ppm`;
+      document.getElementById('rep-ph').textContent = `pH ${telemetryState.ph}`;
+      document.getElementById('rep-et0').textContent = `${telemetryState.et0} mm/day`;
+      document.getElementById('rep-motor').textContent = telemetryState.valve_open ? "RUNNING (Active Irrigation)" : "STOPPED (Standby)";
+
+      const incList = document.getElementById('rep-incidents-list');
+      if (savedIncidents.length === 0) {
+        incList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">No disease incidents logged today.</td></tr>`;
+      } else {
+        incList.innerHTML = savedIncidents.slice(0, 6).map(inc => `
+          <tr class="border-b border-slate-100">
+            <td class="py-2.5 font-mono text-[10px] text-slate-500">${inc.time}</td>
+            <td class="py-2.5 font-bold text-slate-900">${inc.crop}</td>
+            <td class="py-2.5 font-bold text-rose-600">${inc.disease}</td>
+            <td class="py-2.5 text-slate-600">${inc.recommendation.substring(0, 55)}...</td>
+          </tr>
+        `).join('');
+      }
+
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closePrintReportModal() {
+      document.getElementById('report-modal').classList.add('hidden');
+    }
+
+    function triggerPrintReport() {
+      window.print();
+    }
+
+    // ================= ALL-INDIA LIVE SEARCH PLACE & VILLAGE ENGINE =================
+    function openSearchModal() {
+      document.getElementById('search-modal').classList.remove('hidden');
+      document.getElementById('village-search-input').focus();
+    }
+
+    function closeSearchModal() {
+      document.getElementById('search-modal').classList.add('hidden');
+    }
+
+    function handleVillageSearch(e) {
+      const query = e.target.value.trim();
+      const resultsContainer = document.getElementById('search-results-list');
+      
+      if (!query || query.length < 2) {
+        resultsContainer.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">Type your farm's village, mandal, or town name above.</div>`;
+        return;
+      }
+
+      clearTimeout(searchDebounceTimer);
+      resultsContainer.innerHTML = `<div class="text-center py-6 text-xs text-sky-600 font-bold">Searching all Indian cities & villages...</div>`;
+
+      searchDebounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json&country_code=IN`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+              resultsContainer.innerHTML = data.results.map(item => `
+                <div onclick="selectSearchResult('${item.name.replace(/'/g, "\\'")}', '${(item.admin1 || item.country || 'India').replace(/'/g, "\\'")}', ${item.latitude}, ${item.longitude})" class="p-2.5 bg-white hover:bg-sky-50 border border-slate-200 rounded-xl flex items-center justify-between cursor-pointer transition-colors">
+                  <div>
+                    <h4 class="text-xs font-black text-slate-900">${item.name}</h4>
+                    <p class="text-[10px] text-slate-500">${item.admin2 ? item.admin2 + ', ' : ''}${item.admin1 || ''} (${item.country || 'India'})</p>
+                  </div>
+                  <span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-2 py-0.5 rounded-lg font-bold">
+                    ${item.latitude.toFixed(2)}°N, ${item.longitude.toFixed(2)}°E
+                  </span>
+                </div>
+              `).join('');
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn("Geocoding search err:", err);
+        }
+
+        resultsContainer.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">No matching place found. Try searching district name (e.g. Guntur, Warangal, Nashik, Tenali).</div>`;
+      }, 350);
+    }
+
+    function selectSearchResult(name, admin1, lat, lon) {
+      const placeLabel = `${name}, ${admin1}`;
+      activeLocation = { name: placeLabel, lat, lon };
+      
+      document.getElementById('nav-location-label').textContent = `📍 ${name}`;
+      closeSearchModal();
+
+      const lowerName = name.toLowerCase();
+      if (lowerName.includes("guntur") || lowerName.includes("chilli") || lowerName.includes("khammam")) {
+        setCropSelection("chilli");
+      } else if (lowerName.includes("warangal") || lowerName.includes("cotton") || lowerName.includes("adilabad")) {
+        setCropSelection("cotton");
+      } else if (lowerName.includes("nizamabad") || lowerName.includes("paddy") || lowerName.includes("rice") || lowerName.includes("thanjavur")) {
+        setCropSelection("paddy");
+      } else if (lowerName.includes("nashik") || lowerName.includes("onion")) {
+        setCropSelection("onion");
+      } else if (lowerName.includes("ludhiana") || lowerName.includes("punjab") || lowerName.includes("wheat")) {
+        setCropSelection("wheat");
+      }
+
+      fetchRealWeather(lat, lon, placeLabel);
+      sendTelegramAlert(`📍 *Farm Location Switched:* ${placeLabel} (${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E). Realtime weather synced.`);
+    }
+
+    function selectPresetLocation(key) {
+      const p = REGIONAL_FARM_PROFILES[key] || REGIONAL_FARM_PROFILES.hyderabad;
+      activeLocation = { name: p.name, lat: p.lat, lon: p.lon };
+      document.getElementById('nav-location-label').textContent = `📍 ${p.name.split(' ')[0]}`;
+      closeSearchModal();
+
+      if (p.defaultCrop) {
+        setCropSelection(p.defaultCrop);
+      }
+
+      fetchRealWeather(p.lat, p.lon, p.name);
+      sendTelegramAlert(`📍 *Farm Changed:* Switched to ${p.name}. Crop adapted to ${p.defaultCrop}.`);
+    }
+
+    function setCropSelection(cropKey) {
+      selectedCrop = cropKey;
+      document.getElementById('crop-select').value = cropKey;
+      const crop = CROP_CATALOG[selectedCrop];
+      if (crop) {
+        document.getElementById('crop-stage-tag').textContent = crop.stage;
+        diseaseIndex = 0;
+        lastLoggedDisease = "";
+        if (isMockMode) triggerSimulationCycle();
+      }
+    }
+
+    // ================= REAL OPEN-METEO ACCURATE WEATHER FETCHER =================
+    async function fetchRealWeather(lat, lon, placeName) {
+      document.getElementById('weather-loc-tag').textContent = `${placeName} (${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E)`;
+      document.getElementById('weather-sync-pill').textContent = "🔄 Fetching Open-Meteo...";
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation_probability,uv_index,wind_speed_10m&daily=et0_fao_evapotranspiration&timezone=auto`;
+        const res = await fetch(url);
+        
+        if (res.ok) {
+          const data = await res.json();
+          const curr = data.current;
+          const daily = data.daily;
+
+          const temp = curr.temperature_2m !== undefined ? curr.temperature_2m : 31.5;
+          const humidity = curr.relative_humidity_2m !== undefined ? curr.relative_humidity_2m : 65;
+          const rain = curr.precipitation_probability !== undefined ? `${curr.precipitation_probability}%` : "10%";
+          const wind = curr.wind_speed_10m !== undefined ? `${curr.wind_speed_10m} km/h` : "12 km/h";
+          const uv = curr.uv_index !== undefined ? `${Math.round(curr.uv_index)} (${curr.uv_index > 7 ? 'High' : 'Moderate'})` : "6 (Moderate)";
+          const et0 = daily && daily.et0_fao_evapotranspiration ? `${daily.et0_fao_evapotranspiration[0]} mm/d` : "3.4 mm/d";
+
+          document.getElementById('weather-temp-live').textContent = `${temp}°C`;
+          document.getElementById('weather-rain').textContent = rain;
+          document.getElementById('weather-rain-text').textContent = `${rain} (${parseInt(rain) > 40 ? 'Rain Expected - Postpone Spray' : 'Safe for Spraying'})`;
+          document.getElementById('weather-wind').textContent = wind;
+          document.getElementById('weather-uv').textContent = uv;
+          document.getElementById('weather-et0').textContent = et0;
+          document.getElementById('weather-summary-text').innerHTML = `Open-Meteo Synced • Temp: <strong class="text-slate-900">${temp}°C</strong> • Rain: <strong class="text-sky-700">${rain}</strong> • Wind: <strong class="text-slate-800">${wind}</strong>`;
+          document.getElementById('weather-sync-pill').textContent = "● Live Open-Meteo Synced";
+          document.getElementById('weather-sync-pill').className = "text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono font-bold";
+
+          telemetryState.temperature = +(temp).toFixed(1);
+          telemetryState.humidity = Math.round(humidity);
+          return;
+        }
+      } catch (err) {
+        console.warn("Open-Meteo live API fallback:", err);
+      }
+
+      document.getElementById('weather-sync-pill').textContent = "● Offline Microclimate";
+      document.getElementById('weather-sync-pill').className = "text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-mono font-bold";
+    }
+
+    function useDeviceGPS() {
+      if (navigator.geolocation) {
+        document.getElementById('weather-sync-pill').textContent = "🛰️ Querying GPS...";
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            
+            let placeName = "My Farm GPS";
+            try {
+              const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+              if (geoRes.ok) {
+                const geoData = await geoRes.json();
+                placeName = `${geoData.locality || geoData.city || 'Farm Plot'}, ${geoData.principalSubdivision || 'India'}`;
+              }
+            } catch(e){}
+
+            document.getElementById('nav-location-label').textContent = `📍 GPS Location`;
+            fetchRealWeather(lat, lon, placeName);
+            sendTelegramAlert(`📍 *Exact Farm GPS Synced:* ${placeName} (${lat.toFixed(3)}°N, ${lon.toFixed(3)}°E).`);
+          },
+          (err) => {
+            alert("Could not access GPS. Using selected Indian location.");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        alert("GPS geolocation is not supported on this browser.");
+      }
+    }
+
+    function onModelChange() {
+      selectedModel = document.getElementById('model-select').value;
+      const badge = document.getElementById('active-model-badge');
+      if (selectedModel === 'gemini') badge.textContent = "✨ Gemini 2.5 Flash Vision";
+      else if (selectedModel === 'gpt4o') badge.textContent = "⚡ GPT-4o Crop Vision";
+      else badge.textContent = "📱 MobileNetV3 Edge Int8";
+    }
+
+    function handleCustomLeafUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const inferTag = document.getElementById('inference-state-tag');
+      inferTag.textContent = "🔄 AI Vision Analyzing...";
+      inferTag.className = "text-[10px] bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2 py-0.5 rounded-full animate-pulse";
+
+      setTimeout(() => {
+        const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+        const disease = crop.diseases[0];
+        
+        document.getElementById('ai-badge-disease').textContent = `${disease.disease} (Uploaded Leaf)`;
+        document.getElementById('infer-class').textContent = `${disease.disease}`;
+        document.getElementById('infer-prob').textContent = `96.8% (Gemini 2.5 Flash)`;
+        inferTag.textContent = "🔴 Multi-Effects Diagnosed";
+        inferTag.className = "text-[10px] bg-rose-100 text-rose-800 border border-rose-300 font-bold px-2 py-0.5 rounded-full";
+
+        captureCurrentIncident();
+        const tgMsg = `🚨 *Photo Diagnosis Alert:*\n📸 *File:* ${file.name}\n🌱 *Crop:* ${crop.name}\n⚠️ *Diagnosis:* ${disease.disease}\n💊 *Prescription:* ${disease.mitigation}`;
+        sendTelegramAlert(tgMsg);
+      }, 1200);
+    }
+
+    function renderIncidentLogs() {
+      const container = document.getElementById('incidents-container');
+      const badge = document.getElementById('incident-count-badge');
+      if (!container) return;
+
+      badge.textContent = `${savedIncidents.length} Saved Photos`;
+
+      if (savedIncidents.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 px-4 bg-white/80 rounded-2xl border border-dashed border-slate-200">
+            <i data-lucide="check-circle" class="w-8 h-8 text-emerald-500 mx-auto mb-2"></i>
+            <p class="text-xs font-bold text-slate-700">No Plant Problems Right Now</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Your crops are looking healthy. Any detected leaf problem will be saved with picture here automatically.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = savedIncidents.map((item) => `
+        <div class="bg-white/95 border border-slate-200 p-3.5 rounded-2xl shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-1.5 transition-all duration-300 relative group space-y-2.5 cursor-pointer">
+          
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <!-- Visual Leaf Snapshot Photo Thumbnail with Interactive Hover Animation -->
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr ${item.photoColor || 'from-amber-500/20 to-rose-500/30 border-amber-300'} border flex items-center justify-center shrink-0 shadow-inner text-xl relative overflow-hidden transform transition-all duration-300 group-hover:scale-115 group-hover:-rotate-6 group-hover:shadow-lg group-hover:border-sky-400">
+                <span class="inline-block transform transition-transform duration-300 group-hover:scale-125">${item.photoIcon || '🍂'}</span>
+                <span class="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white animate-ping"></span>
+              </div>
+
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight group-hover:text-sky-700 transition-colors">${item.disease}</h4>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[10px] text-slate-500 font-bold">${item.crop} • ${item.time}</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${item.badgeColor} border">${item.severity}</span>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="dismissIncident(${item.id})" class="text-slate-400 hover:text-rose-600 p-1 rounded-lg opacity-70 group-hover:opacity-100 transition-opacity cursor-pointer" title="Dismiss / Mark Solved">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-[11px] space-y-1.5">
+            <p class="text-slate-700 font-medium leading-relaxed">
+              <strong class="text-slate-900 font-bold">Field Context:</strong> ${item.desc}
+            </p>
+            <p class="text-sky-950 font-bold pt-1 border-t border-slate-200 flex items-start gap-1">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5"></i>
+              <span><strong>Prescription:</strong> ${item.recommendation}</span>
+            </p>
+          </div>
+
+          <div class="flex items-center justify-between pt-0.5 text-[10px] font-bold text-slate-500">
+            <span class="text-sky-600 flex items-center gap-1">
+              <i data-lucide="send" class="w-3.5 h-3.5 text-sky-600"></i> Telegram (@jakeernabi)
+            </span>
+            <button onclick="dispatchIncidentTelegram(${item.id})" class="text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1 cursor-pointer font-bold bg-transparent border-0 p-0">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i> Send to Telegram
+            </button>
+          </div>
+
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function dismissIncident(id) {
+      savedIncidents = savedIncidents.filter(item => item.id !== id);
+      renderIncidentLogs();
+    }
+
+    function dispatchIncidentTelegram(id) {
+      const inc = savedIncidents.find(item => item.id === id);
+      if (inc) {
+        sendWhatsAppAlert(`${inc.crop} Problem: ${inc.disease}. Prescription: ${inc.recommendation}`, true);
+      }
+    }
+
+    function clearIncidentLogs() {
+      if (confirm("Clear all saved problem pictures and history?")) {
+        savedIncidents = [];
+        renderIncidentLogs();
+      }
+    }
+
+    function captureCurrentIncident() {
+      if (!currentPayload) return;
+      const diag = currentPayload.ai_diagnostics;
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+
+      const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+      const activeDisease = crop.diseases.find(d => d.disease === diag.disease) || crop.diseases[0];
+
+      const newIncident = {
+        id: Date.now(),
+        time: timeStr,
+        crop: document.getElementById('crop-select').options[document.getElementById('crop-select').selectedIndex].text.split(' ')[1] || "Plant",
+        disease: diag.disease,
+        severity: diag.isNegative ? "Needs Spray" : "Healthy",
+        confidence: `${Math.round(diag.confidence)}% Match`,
+        desc: `Snapshot saved at ${timeStr}. Field condition: Temperature was ${currentPayload.telemetry.temperature}°C, Air Humidity was ${currentPayload.telemetry.humidity}%, Soil Moisture was ${currentPayload.telemetry.soil_moisture}%.`,
+        recommendation: diag.mitigation,
+        photoIcon: activeDisease.photoIcon || "🍂",
+        photoColor: activeDisease.photoColor || "from-amber-500/20 to-rose-500/30 border-amber-300",
+        badgeColor: diag.isNegative ? "bg-amber-100 text-amber-900 border-amber-300" : "bg-emerald-100 text-emerald-900 border-emerald-300"
+      };
+
+      savedIncidents.unshift(newIncident);
+      if (savedIncidents.length > 8) savedIncidents.pop();
+      renderIncidentLogs();
+
+      if (diag.isNegative) {
+        const smsAlertText = `Crop: ${newIncident.crop}, Diagnosis: ${diag.disease} (${Math.round(diag.confidence)}% Match), Soil: ${currentPayload.telemetry.soil_moisture}%, Temp: ${currentPayload.telemetry.temperature}°C. Prescription: ${diag.mitigation}.`;
+        sendWhatsAppAlert(smsAlertText, true);
+      }
+    }
+
+    function applyData(data) {
+      currentPayload = data;
+
+      document.getElementById('timestamp-badge').textContent = data.timestamp.split(' ')[1] || data.timestamp;
+
+      // Soil Moisture
+      const moisture = data.telemetry.soil_moisture;
+      document.getElementById('val-moisture').textContent = `${moisture}%`;
+      document.getElementById('bar-moisture').style.width = `${Math.min(Math.max(moisture, 5), 100)}%`;
+
+      const moistText = document.getElementById('moisture-status-text');
+      if (moisture < 25) {
+        moistText.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Soil is drying, needs water now`;
+        moistText.className = "text-xs font-bold text-amber-600 mt-2.5 flex items-center gap-1";
+      } else if (moisture > 50) {
+        moistText.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Soil has plenty of water`;
+        moistText.className = "text-xs font-bold text-emerald-600 mt-2.5 flex items-center gap-1";
+      } else {
+        moistText.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Soil water is in good range`;
+        moistText.className = "text-xs font-bold text-sky-700 mt-2.5 flex items-center gap-1";
+      }
+
+      // Temp & Humidity
+      document.getElementById('val-temp').textContent = `${data.telemetry.temperature}°C`;
+      document.getElementById('val-humidity').textContent = `${data.telemetry.humidity}%`;
+      if (data.telemetry.solar) document.getElementById('val-solar').textContent = `Bright (${data.telemetry.solar} W/m²)`;
+      if (data.telemetry.et0) document.getElementById('val-et0').textContent = `${data.telemetry.et0} mm / day`;
+      if (data.telemetry.deficit) document.getElementById('val-deficit').textContent = `~${data.telemetry.deficit} Litres / acre`;
+      if (data.telemetry.ph) document.getElementById('val-ph').textContent = `Healthy & Balanced (pH ${data.telemetry.ph})`;
+      if (data.telemetry.battery) document.getElementById('val-battery').textContent = `94% Charged (${data.telemetry.battery}V)`;
+
+      // NPK
+      document.getElementById('val-n').textContent = data.telemetry.nitrogen;
+      document.getElementById('val-p').textContent = data.telemetry.phosphorus;
+      document.getElementById('val-k').textContent = data.telemetry.potassium;
+      document.getElementById('bar-n').style.width = `${Math.min((data.telemetry.nitrogen / 80) * 100, 100)}%`;
+      document.getElementById('bar-p').style.width = `${Math.min((data.telemetry.phosphorus / 50) * 100, 100)}%`;
+      document.getElementById('bar-k').style.width = `${Math.min((data.telemetry.potassium / 250) * 100, 100)}%`;
+
+      // AI Diagnostics
+      document.getElementById('ai-badge-disease').textContent = data.ai_diagnostics.disease;
+      document.getElementById('ai-confidence').textContent = `${Math.round(data.ai_diagnostics.confidence)}% Match`;
+      document.getElementById('ai-mitigation').textContent = data.ai_diagnostics.mitigation;
+      document.getElementById('advisory-text').textContent = `${data.ai_diagnostics.disease}: ${data.ai_diagnostics.mitigation}`;
+
+      // Live Multi-Effect Inference Status
+      const inferClass = document.getElementById('infer-class');
+      const inferProb = document.getElementById('infer-prob');
+      const inferSecondary = document.getElementById('infer-secondary');
+      const inferSecondaryProb = document.getElementById('infer-secondary-prob');
+      const inferTag = document.getElementById('inference-state-tag');
+
+      const isNegative = !data.ai_diagnostics.disease.includes("Healthy");
+
+      inferClass.textContent = data.ai_diagnostics.disease.split('+')[0].trim();
+      inferProb.textContent = `${Math.round(data.ai_diagnostics.confidence)}% Match`;
+      inferSecondary.textContent = data.ai_diagnostics.secondary || "Secondary Stress Factor";
+      inferSecondaryProb.textContent = `${data.ai_diagnostics.secondaryProb || 64}% Match`;
+
+      if (isNegative) {
+        inferTag.className = "text-[10px] bg-rose-100 text-rose-800 border border-rose-300 font-bold px-2 py-0.5 rounded-full animate-pulse";
+        inferTag.textContent = "🔴 2 Outbreaks Found";
+
+        if (lastLoggedDisease !== data.ai_diagnostics.disease) {
+          lastLoggedDisease = data.ai_diagnostics.disease;
+          const timeStr = data.timestamp.split(' ')[1] || new Date().toTimeString().split(' ')[0];
+          const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+          const activeDisease = crop.diseases.find(d => d.disease === data.ai_diagnostics.disease) || crop.diseases[0];
+
+          const newIncident = {
+            id: Date.now(),
+            time: timeStr,
+            crop: document.getElementById('crop-select').options[document.getElementById('crop-select').selectedIndex].text.split(' ')[1] || "Plant",
+            disease: data.ai_diagnostics.disease,
+            severity: "Needs Spray & Food",
+            confidence: `${Math.round(data.ai_diagnostics.confidence)}% Match`,
+            desc: data.ai_diagnostics.desc || `Problem noticed at ${timeStr}. Field Temp: ${data.telemetry.temperature}°C, Air Humidity: ${data.telemetry.humidity}%, Soil Moisture: ${data.telemetry.soil_moisture}%.`,
+            recommendation: data.ai_diagnostics.mitigation,
+            photoIcon: activeDisease.photoIcon || "🍂",
+            photoColor: activeDisease.photoColor || "from-amber-500/20 to-rose-500/30 border-amber-300",
+            badgeColor: "bg-amber-100 text-amber-900 border-amber-300"
+          };
+          
+          savedIncidents.unshift(newIncident);
+          if (savedIncidents.length > 8) savedIncidents.pop();
+          renderIncidentLogs();
+
+          const tgAlertText = `⚠️ *[AgriPulse Auto-Alert]*\n🌾 *Crop:* ${newIncident.crop}\n🔬 *Diagnosis:* ${data.ai_diagnostics.disease}\n💊 *Prescription:* ${data.ai_diagnostics.mitigation}`;
+          sendTelegramAlert(tgAlertText);
+        }
+      } else {
+        inferTag.className = "text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded-full";
+        inferTag.textContent = "🟢 Clean & Healthy";
+      }
+
+      // Jitter bounding boxes for multiple effects
+      const bbox1 = document.getElementById('ai-bbox-1');
+      const bbox2 = document.getElementById('ai-bbox-2');
+      if (bbox1) {
+        bbox1.style.top = `${18 + Math.floor(Math.random() * 4)}%`;
+        bbox1.style.left = `${20 + Math.floor(Math.random() * 4)}%`;
+      }
+      if (bbox2) {
+        bbox2.style.bottom = `${12 + Math.floor(Math.random() * 4)}%`;
+        bbox2.style.right = `${18 + Math.floor(Math.random() * 4)}%`;
+      }
+
+      updateVernacularDisplay();
+
+      // Update Motor Status & Flow Animations
+      updatePumpUI(data.actuation.valve_open, data.actuation.status);
+
+      // Update Chart
+      chart.data.datasets[0].data.shift();
+      chart.data.datasets[0].data.push(data.telemetry.soil_moisture);
+      chart.data.datasets[1].data.shift();
+      chart.data.datasets[1].data.push(data.telemetry.temperature);
+      chart.update('none');
+    }
+
+    // Comprehensive Pump UI & Animation Synchronizer
+    function updatePumpUI(isOpen, statusText) {
+      const valveBox = document.getElementById('valve-icon-box');
+      const pumpBtnText = document.getElementById('pump-btn-text');
+      const actuatorCard = document.getElementById('actuator-card');
+      const turbineIcon = document.getElementById('motor-turbine-icon');
+      const waterFlowBar = document.getElementById('water-flow-bar');
+      const flowRateText = document.getElementById('pipeline-flow-rate');
+      const valValve = document.getElementById('val-valve');
+
+      if (isOpen) {
+        valValve.textContent = "PUMP RUNNING";
+        valValve.className = "text-2xl font-black text-emerald-600 mt-1 tracking-tight";
+        valveBox.className = "p-3.5 bg-emerald-500 text-white rounded-2xl shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-all flex items-center justify-center";
+        pumpBtnText.textContent = "Turn OFF Motor";
+        pumpBtnText.className = "text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-1.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm";
+        actuatorCard.classList.add('motor-glowing');
+        
+        // Active Animations
+        turbineIcon.classList.add('turbine-active');
+        waterFlowBar.classList.add('water-pipe-active');
+        waterFlowBar.style.width = "100%";
+        flowRateText.textContent = "14.2 L/min (Active Flow)";
+        flowRateText.className = "text-emerald-600 font-mono font-bold";
+      } else {
+        valValve.textContent = "PUMP STOPPED";
+        valValve.className = "text-2xl font-black text-slate-400 mt-1 tracking-tight";
+        valveBox.className = "p-3.5 bg-slate-200 text-slate-600 rounded-2xl group-hover:scale-105 transition-all flex items-center justify-center";
+        pumpBtnText.textContent = "Turn ON Motor";
+        pumpBtnText.className = "text-xs font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm";
+        actuatorCard.classList.remove('motor-glowing');
+        
+        // Inactive Animations
+        turbineIcon.classList.remove('turbine-active');
+        waterFlowBar.classList.remove('water-pipe-active');
+        waterFlowBar.style.width = "0%";
+        flowRateText.textContent = "0.0 L/min (Standby)";
+        flowRateText.className = "text-slate-400 font-mono";
+      }
+      document.getElementById('val-actuation-desc').textContent = statusText || (isOpen ? "Water Pump is RUNNING" : "Water Pump is STOPPED");
+
+      // Sync mobile dedicated pump section
+      const valValveM = document.getElementById('val-valve-mobile');
+      const valveBoxM = document.getElementById('valve-icon-box-mobile');
+      const pumpBtnTextM = document.getElementById('pump-btn-text-mobile');
+      const turbineIconM = document.getElementById('motor-turbine-icon-mobile');
+      const waterFlowBarM = document.getElementById('water-flow-bar-mobile');
+      const flowRateTextM = document.getElementById('pipeline-flow-rate-mobile');
+      const descM = document.getElementById('val-actuation-desc-mobile');
+
+      if (valValveM) {
+        if (isOpen) {
+          valValveM.textContent = "PUMP RUNNING";
+          valValveM.className = "text-xl font-black text-emerald-400 tracking-tight";
+          if (valveBoxM) valveBoxM.className = "w-20 h-20 bg-emerald-500 text-white rounded-3xl shadow-xl shadow-emerald-500/40 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform";
+          if (pumpBtnTextM) pumpBtnTextM.innerHTML = '<i data-lucide="power" class="w-4 h-4"></i><span>Turn OFF Motor (Manual)</span>';
+          if (turbineIconM) turbineIconM.classList.add('turbine-active');
+          if (waterFlowBarM) { waterFlowBarM.classList.add('water-pipe-active'); waterFlowBarM.style.width = "100%"; }
+          if (flowRateTextM) flowRateTextM.textContent = "14.2 L/min (Active Flow)";
+          if (descM) descM.textContent = "Auto Watering Active: Soil moisture is below target threshold";
+        } else {
+          valValveM.textContent = "PUMP STOPPED";
+          valValveM.className = "text-xl font-black text-slate-400 tracking-tight";
+          if (valveBoxM) valveBoxM.className = "w-20 h-20 bg-slate-800 text-slate-500 rounded-3xl flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform";
+          if (pumpBtnTextM) pumpBtnTextM.innerHTML = '<i data-lucide="power" class="w-4 h-4"></i><span>Turn ON Motor (Manual)</span>';
+          if (turbineIconM) turbineIconM.classList.remove('turbine-active');
+          if (waterFlowBarM) { waterFlowBarM.classList.remove('water-pipe-active'); waterFlowBarM.style.width = "0%"; }
+          if (flowRateTextM) flowRateTextM.textContent = "0.0 L/min (Standby)";
+          if (descM) descM.textContent = "Pump is Standby: Adequate moisture or motor manually paused";
+        }
+      }
+    }
+
+    // Toggle between Auto PID Mode and Manual Override Mode
+    function togglePumpAutoMode() {
+      telemetryState.is_manual_override = !telemetryState.is_manual_override;
+      const modeBadge = document.getElementById('pump-mode-badge');
+      const modeBadgeM = document.getElementById('pump-mode-badge-mobile');
+
+      if (telemetryState.is_manual_override) {
+        if (modeBadge) {
+          modeBadge.textContent = "MANUAL OVERRIDE";
+          modeBadge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 cursor-pointer";
+        }
+        if (modeBadgeM) {
+          modeBadgeM.textContent = "MANUAL OVERRIDE";
+          modeBadgeM.className = "text-[10px] font-black uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 cursor-pointer shadow-sm";
+        }
+        sendTelegramAlert(`⚙️ *Water Pump Mode Changed:* Switched to MANUAL OVERRIDE. Farmer has direct control.`);
+      } else {
+        if (modeBadge) {
+          modeBadge.textContent = "AUTO MODE";
+          modeBadge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 cursor-pointer";
+        }
+        if (modeBadgeM) {
+          modeBadgeM.textContent = "AUTO MODE";
+          modeBadgeM.className = "text-[10px] font-black uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 cursor-pointer shadow-sm";
+        }
+        sendTelegramAlert(`⚙️ *Water Pump Mode Changed:* Switched to AUTO PID MODE. Autonomous irrigation enabled.`);
+      }
+      if (currentPayload) {
+        triggerSimulationCycle();
+      }
+    }
+
+    // Instant Water Pump Switcher (Fixes Bug: Guarantees the motor switches OFF and stays OFF!)
+    async function toggleActuator() {
+      // 1. Mark as manual override so the auto loop never flips it back!
+      telemetryState.is_manual_override = true;
+      telemetryState.valve_open = !telemetryState.valve_open;
+      
+      const modeBadge = document.getElementById('pump-mode-badge');
+      modeBadge.textContent = "MANUAL OVERRIDE";
+      modeBadge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 cursor-pointer";
+
+      const newStatus = telemetryState.valve_open 
+        ? "Manual Mode: Water Motor is RUNNING" 
+        : "Manual Mode: Water Motor is STOPPED by Farmer";
+      
+      telemetryState.valve_status = newStatus;
+
+      // 2. Immediately update UI with zero delay
+      updatePumpUI(telemetryState.valve_open, newStatus);
+      if (currentPayload) {
+        currentPayload.actuation.valve_open = telemetryState.valve_open;
+        currentPayload.actuation.status = newStatus;
+      }
+
+      // 3. Send Telegram Notification of manual switch
+      const actionText = telemetryState.valve_open ? "🟢 *Water Pump Motor Started (ON)*" : "🔴 *Water Pump Motor Switched OFF*";
+      sendTelegramAlert(`${actionText}\n🌾 *Plot:* ${farmerProfile.id} (${farmerProfile.name})\n💧 *Soil Moisture:* ${telemetryState.soil_moisture}%\n⚙️ *Mode:* Manual Override Active`);
+
+      // 4. If connected to a backend server, notify it asynchronously
+      if (!isMockMode && window.location.protocol !== 'file:') {
+        try {
+          await fetch('/api/actuator/toggle', { method: 'POST' });
+        } catch (err) {
+          console.warn("Backend actuator toggle notice:", err);
+        }
+      }
+    }
+
+    function updateVernacularDisplay() {
+      if (!currentPayload) return;
+      const lang = document.getElementById('lang-select').value;
+      const vernacularElem = document.getElementById('vernacular-advisory');
+      const ttsBtnText = document.getElementById('tts-button-text');
+      
+      const vData = currentPayload.ai_diagnostics.vernacular || {};
+      
+      if (lang === 'en') {
+        vernacularElem.textContent = vData['en'] || `Advice: ${currentPayload.ai_diagnostics.mitigation}`;
+        ttsBtnText.textContent = "🔊 Listen to Advice";
+      } else if (lang === 'te') {
+        vernacularElem.textContent = vData['te'] || currentPayload.ai_diagnostics.mitigation;
+        ttsBtnText.textContent = "🔊 సలహా వినండి (Audio)";
+      } else if (lang === 'hi') {
+        vernacularElem.textContent = vData['hi'] || currentPayload.ai_diagnostics.mitigation;
+        ttsBtnText.textContent = "🔊 सलाह सुनें (Audio)";
+      } else if (lang === 'ta') {
+        vernacularElem.textContent = vData['ta'] || currentPayload.ai_diagnostics.mitigation;
+        ttsBtnText.textContent = "🔊 ஆலோசனை கேளுங்கள்";
+      } else if (lang === 'kn') {
+        vernacularElem.textContent = vData['kn'] || currentPayload.ai_diagnostics.mitigation;
+        ttsBtnText.textContent = "🔊 ಸಲಹೆ ಕೇಳಿ (Audio)";
+      }
+    }
+
+    function onCropChange() {
+      selectedCrop = document.getElementById('crop-select').value;
+      const crop = CROP_CATALOG[selectedCrop];
+      if (crop) {
+        document.getElementById('crop-stage-tag').textContent = crop.stage;
+        diseaseIndex = 0;
+        lastLoggedDisease = "";
+        triggerSimulationCycle();
+      }
+    }
+
+    function onLangChange() {
+      selectedLang = document.getElementById('lang-select').value;
+      updateVernacularDisplay();
+      if (currentPayload) {
+        applyData(currentPayload);
+      }
+    }
+
+    // ================= REALISTIC NATURAL FEMALE VOICE (FAST PACED 1.18x) =================
+    let availableVoices = [];
+    function loadVoices() {
+      if ('speechSynthesis' in window) {
+        availableVoices = window.speechSynthesis.getVoices();
+      }
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+      loadVoices();
+    }
+
+    function speakAdvisory() {
+      if (!currentPayload) return;
+      const lang = document.getElementById('lang-select').value;
+      const vernacularElem = document.getElementById('vernacular-advisory');
+      const textToSpeak = vernacularElem.textContent || currentPayload.ai_diagnostics.mitigation;
+
+      const ttsBtnText = document.getElementById('tts-button-text');
+      const originalBtnText = ttsBtnText.textContent;
+      ttsBtnText.textContent = "🔊 Speaking...";
+
+      // Strategy 1: Realistic Natural Female Google TTS Stream (Fast 1.18x Pace)
+      const audioPlayer = document.getElementById('tts-audio-player');
+      const streamUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(textToSpeak)}`;
+      
+      audioPlayer.src = streamUrl;
+      audioPlayer.playbackRate = 1.18;
+
+      audioPlayer.onended = () => {
+        ttsBtnText.textContent = originalBtnText;
+      };
+      audioPlayer.onerror = () => {
+        speakWithWebSpeechAPIFemale(textToSpeak, lang, originalBtnText);
+      };
+
+      const playPromise = audioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          speakWithWebSpeechAPIFemale(textToSpeak, lang, originalBtnText);
+        });
+      }
+    }
+
+    function speakWithWebSpeechAPIFemale(textToSpeak, lang, originalBtnText) {
+      const ttsBtnText = document.getElementById('tts-button-text');
+      if (!('speechSynthesis' in window)) {
+        alert("Audio speech is not supported on this browser.");
+        ttsBtnText.textContent = originalBtnText;
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      let targetLangCode = "en-IN";
+      if (lang === 'te') targetLangCode = "te-IN";
+      else if (lang === 'hi') targetLangCode = "hi-IN";
+      else if (lang === 'ta') targetLangCode = "ta-IN";
+      else if (lang === 'kn') targetLangCode = "kn-IN";
+
+      utterance.lang = targetLangCode;
+      utterance.rate = 1.18;
+      utterance.pitch = 1.10;
+
+      if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+      
+      const femaleVoice = availableVoices.find(v => 
+        (v.name.toLowerCase().includes("female") || v.name.includes("Swara") || v.name.includes("Shruti") || v.name.includes("Zira") || v.name.includes("Heera") || v.name.includes("Kavya")) && 
+        (v.lang.toLowerCase().includes("in") || v.lang.toLowerCase().startsWith(lang))
+      ) || availableVoices.find(v => v.lang.toLowerCase().startsWith(lang))
+        || availableVoices.find(v => v.name.toLowerCase().includes("female"))
+        || availableVoices[0];
+
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+
+      utterance.onend = () => { ttsBtnText.textContent = originalBtnText; };
+      utterance.onerror = () => { ttsBtnText.textContent = originalBtnText; };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // ================= SIMULATION ENGINE WITH BUG-FREE MOTOR & REALISTIC PHYSICS =================
+    function triggerSimulationCycle() {
+      const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+
+      // Check if user has engaged manual override
+      if (!telemetryState.is_manual_override) {
+        // In Auto Mode: follow PID threshold boundaries
+        if (telemetryState.valve_open) {
+          telemetryState.soil_moisture = +(Math.min(telemetryState.soil_moisture + 0.9, 52.0)).toFixed(1);
+          if (telemetryState.soil_moisture >= 45.0) {
+            telemetryState.valve_open = false;
+            telemetryState.valve_status = "Motor Auto-Stopped: Optimal moisture reached";
+          }
+        } else {
+          telemetryState.soil_moisture = +(Math.max(telemetryState.soil_moisture - 0.4, 18.0)).toFixed(1);
+          if (telemetryState.soil_moisture <= 24.0) {
+            telemetryState.valve_open = true;
+            telemetryState.valve_status = "Auto-Watering: Soil moisture is low (<25%)";
+          }
+        }
+      } else {
+        // In Manual Override Mode: NEVER force motor on or off! Respect farmer command!
+        if (telemetryState.valve_open) {
+          telemetryState.soil_moisture = +(Math.min(telemetryState.soil_moisture + 0.9, 60.0)).toFixed(1);
+          telemetryState.valve_status = "Manual Mode: Water Motor is RUNNING";
+        } else {
+          telemetryState.soil_moisture = +(Math.max(telemetryState.soil_moisture - 0.3, 14.0)).toFixed(1);
+          telemetryState.valve_status = "Manual Mode: Water Motor is STOPPED by Farmer";
+        }
+      }
+
+      // Cycle disease occasionally
+      if (Math.random() < 0.12) {
+        diseaseIndex = (diseaseIndex + 1) % crop.diseases.length;
+      }
+      const activeDisease = crop.diseases[diseaseIndex % crop.diseases.length];
+
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+
+      const payload = {
+        timestamp: `${now.toISOString().split('T')[0]} ${timeStr}`,
+        crop_profile: {
+          crop: selectedCrop,
+          name: crop.name,
+          stage: crop.stage
+        },
+        telemetry: {
+          soil_moisture: telemetryState.soil_moisture,
+          temperature: telemetryState.temperature,
+          humidity: telemetryState.humidity,
+          nitrogen: telemetryState.nitrogen,
+          phosphorus: telemetryState.phosphorus,
+          potassium: telemetryState.potassium,
+          ph: telemetryState.ph,
+          solar: telemetryState.solar,
+          et0: telemetryState.et0,
+          deficit: telemetryState.deficit,
+          battery: telemetryState.battery
+        },
+        ai_diagnostics: {
+          disease: activeDisease.disease,
+          secondary: activeDisease.secondary,
+          secondaryProb: activeDisease.secondaryProb,
+          isNegative: activeDisease.isNegative,
+          severity: activeDisease.severity,
+          desc: activeDisease.desc,
+          confidence: activeDisease.confidence,
+          mitigation: activeDisease.mitigation,
+          vernacular: activeDisease.vernacular
+        },
+        actuation: {
+          valve_open: telemetryState.valve_open,
+          status: telemetryState.valve_status
+        }
+      };
+
+      applyData(payload);
+    }
+
+    function startLocalSimulation() {
+      isMockMode = true;
+      document.getElementById('conn-status').textContent = "IoT Simulator";
+      document.getElementById('conn-status').className = "text-xs font-bold text-amber-800";
+      document.getElementById('conn-ping').className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+      document.getElementById('conn-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
+      
+      triggerSimulationCycle();
+      if (!localMockTimer) {
+        localMockTimer = setInterval(triggerSimulationCycle, 2000);
+      }
+    }
+
+    async function pollHttpTelemetry() {
+      try {
+        const res = await fetch('/api/telemetry');
+        if (res.ok) {
+          const data = await res.json();
+          isMockMode = false;
+          document.getElementById('conn-status').textContent = "Live IoT";
+          document.getElementById('conn-status').className = "text-xs font-black text-emerald-800";
+          document.getElementById('conn-ping').className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+          document.getElementById('conn-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+          applyData(data);
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    function initWebSocket() {
+      renderIncidentLogs();
+      triggerSimulationCycle();
+      fetchRealWeather(activeLocation.lat, activeLocation.lon, activeLocation.name);
+
+      if (window.location.protocol === 'file:') {
+        startLocalSimulation();
+        return;
+      }
+
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+      let ws;
+
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          isMockMode = false;
+          if (localMockTimer) {
+            clearInterval(localMockTimer);
+            localMockTimer = null;
+          }
+          document.getElementById('conn-status').textContent = "Live IoT";
+          document.getElementById('conn-status').className = "text-xs font-black text-emerald-800";
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            applyData(data);
+          } catch (e) {}
+        };
+
+        ws.onclose = async () => {
+          const polled = await pollHttpTelemetry();
+          if (polled) {
+            if (!localMockTimer) localMockTimer = setInterval(pollHttpTelemetry, 2000);
+          } else {
+            startLocalSimulation();
+          }
+        };
+
+        ws.onerror = async () => {
+          const polled = await pollHttpTelemetry();
+          if (polled) {
+            if (!localMockTimer) localMockTimer = setInterval(pollHttpTelemetry, 2000);
+          } else {
+            startLocalSimulation();
+          }
+        };
+      } catch (e) {
+        startLocalSimulation();
+      }
+    }
+
+    initWebSocket();
+
+    // Mobile Tab Switcher Logic (Instant & Lag-Free)
+    let currentMobileTab = 'overview';
+
+    function switchMobileTab(tab) {
+      currentMobileTab = tab;
+
+      // Update button highlights
+      const tabs = ['overview', 'camera', 'pump', 'incidents'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`btn-tab-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl text-sky-400 bg-sky-500/20 shadow-sm cursor-pointer active:scale-95";
+          } else {
+            btn.className = "flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl text-slate-400 hover:text-white cursor-pointer active:scale-95";
+          }
+        }
+      });
+
+      const secWeather = document.getElementById('sec-weather');
+      const secAdvisory = document.getElementById('sec-advisory');
+      const secCards = document.getElementById('sec-cards');
+      const secPanelsGrid = document.getElementById('sec-panels-grid');
+      const panelCamera = document.getElementById('panel-camera');
+      const panelIncidents = document.getElementById('panel-incidents');
+      const panelNpk = document.getElementById('panel-npk');
+      const secChart = document.getElementById('sec-chart');
+      const secPumpMobile = document.getElementById('sec-pump-mobile');
+
+      // On desktop (>= 1024px), keep all panels visible
+      if (window.innerWidth >= 1024) {
+        if (secWeather) secWeather.style.display = '';
+        if (secAdvisory) secAdvisory.style.display = '';
+        if (secCards) secCards.style.display = '';
+        if (secPanelsGrid) secPanelsGrid.style.display = '';
+        if (panelCamera) panelCamera.style.display = '';
+        if (panelIncidents) panelIncidents.style.display = '';
+        if (panelNpk) panelNpk.style.display = '';
+        if (secChart) secChart.style.display = '';
+        if (secPumpMobile) secPumpMobile.style.display = 'none';
+        return;
+      }
+
+      // On mobile (< 1024px): hide all first
+      if (secWeather) secWeather.style.display = 'none';
+      if (secAdvisory) secAdvisory.style.display = 'none';
+      if (secCards) secCards.style.display = 'none';
+      if (secPanelsGrid) secPanelsGrid.style.display = 'none';
+      if (panelCamera) panelCamera.style.display = 'none';
+      if (panelIncidents) panelIncidents.style.display = 'none';
+      if (panelNpk) panelNpk.style.display = 'none';
+      if (secChart) secChart.style.display = 'none';
+      if (secPumpMobile) secPumpMobile.style.display = 'none';
+
+      // Show the selected tab
+      if (tab === 'overview') {
+        if (secWeather) secWeather.style.display = 'flex';
+        if (secAdvisory) secAdvisory.style.display = 'block';
+        if (secCards) secCards.style.display = 'grid';
+        if (secPanelsGrid) secPanelsGrid.style.display = 'block';
+        if (panelNpk) panelNpk.style.display = 'flex';
+        if (secChart) secChart.style.display = 'block';
+      } else if (tab === 'camera') {
+        if (secPanelsGrid) secPanelsGrid.style.display = 'block';
+        if (panelCamera) panelCamera.style.display = 'flex';
+      } else if (tab === 'pump') {
+        if (secPumpMobile) secPumpMobile.style.display = 'block';
+      } else if (tab === 'incidents') {
+        if (secPanelsGrid) secPanelsGrid.style.display = 'block';
+        if (panelIncidents) panelIncidents.style.display = 'flex';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // Responsive window resize listener
+    window.addEventListener('resize', () => {
+      switchMobileTab(currentMobileTab);
+    });
+
+    // Auto-init on page ready
+    setTimeout(() => {
+      switchMobileTab('overview');
+    }, 50);
+  </script>
+
+  <!-- ================= MOBILE FLOATING BOTTOM NAVIGATION BAR ================= -->
+  <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-3 inset-x-3 z-50 bg-slate-900/95 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl p-1.5 flex items-center justify-around text-white">
+    <button onclick="switchMobileTab('overview')" id="btn-tab-overview" class="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-200 text-sky-400 bg-sky-500/20 shadow-sm cursor-pointer active:scale-95">
+      <i data-lucide="layout-dashboard" class="w-5 h-5 mb-0.5"></i>
+      <span class="text-[10px] font-bold">Overview</span>
+    </button>
+    <button onclick="switchMobileTab('camera')" id="btn-tab-camera" class="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-200 text-slate-400 hover:text-white cursor-pointer active:scale-95">
+      <i data-lucide="camera" class="w-5 h-5 mb-0.5"></i>
+      <span class="text-[10px] font-bold">AI Doctor</span>
+    </button>
+    <button onclick="switchMobileTab('pump')" id="btn-tab-pump" class="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-200 text-slate-400 hover:text-white cursor-pointer active:scale-95">
+      <i data-lucide="droplet" class="w-5 h-5 mb-0.5"></i>
+      <span class="text-[10px] font-bold">Pump</span>
+    </button>
+    <button onclick="switchMobileTab('incidents')" id="btn-tab-incidents" class="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-200 text-slate-400 hover:text-white cursor-pointer active:scale-95">
+      <i data-lucide="clipboard-list" class="w-5 h-5 mb-0.5"></i>
+      <span class="text-[10px] font-bold">Incidents</span>
+    </button>
+  </nav>
+</body>
+</html>
