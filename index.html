@@ -74,6 +74,34 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
+    /* 3D Perspective and Card Tilt */
+    .perspective-container {
+      perspective: 1200px;
+    }
+    .tilt-card {
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.2s ease;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    /* Audio Waveform Dancing Bars */
+    .waveform-bar {
+      width: 3px;
+      background: #f59e0b;
+      border-radius: 9999px;
+      display: inline-block;
+      animation: wave 1.2s ease-in-out infinite;
+    }
+    .waveform-bar:nth-child(1) { height: 8px; animation-delay: 0.0s; }
+    .waveform-bar:nth-child(2) { height: 16px; animation-delay: 0.15s; }
+    .waveform-bar:nth-child(3) { height: 24px; animation-delay: 0.3s; }
+    .waveform-bar:nth-child(4) { height: 14px; animation-delay: 0.45s; }
+    .waveform-bar:nth-child(5) { height: 18px; animation-delay: 0.2s; }
+    .waveform-bar:nth-child(6) { height: 10px; animation-delay: 0.35s; }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1.3); }
+    }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background-color: #f0f7ff;
@@ -355,14 +383,20 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Live Status Pill -->
-          <div class="flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-2xl shadow-sm">
+          <!-- Live Status Pill (Starts in Awaiting IoT state) -->
+          <button onclick="openIotConnectModal()" class="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-2xl shadow-sm transition-colors cursor-pointer" title="Click to Connect External IoT Sensors">
             <span class="relative flex h-2 w-2">
-              <span id="conn-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span id="conn-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span id="conn-ping" class="hidden animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span id="conn-dot" class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             </span>
-            <span id="conn-status" class="text-[11px] font-black text-emerald-800">Live IoT</span>
-          </div>
+            <span id="conn-status" class="text-[11px] font-black text-slate-700">Awaiting IoT</span>
+          </button>
+
+          <!-- External IoT Sensor Connect Hub Button -->
+          <button onclick="openIotConnectModal()" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-sm transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer active:scale-95" title="Connect External IoT Sensors / View Code & Endpoints">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Connect IoT</span>
+          </button>
 
           <!-- CallMeBot Telegram Gateway Settings Button -->
           <button onclick="openWhatsAppModal()" class="p-2 bg-sky-50 hover:bg-sky-100 text-sky-600 hover:text-sky-700 rounded-2xl border border-sky-200 shadow-sm transition-colors cursor-pointer flex items-center justify-center" title="Telegram (@jakeernabi) Alert Gateway & Settings">
@@ -472,24 +506,25 @@
       </div>
     </div>
 
-    <!-- ================= HERO ACTIONABLE ADVISORY BANNER ================= -->
-    <div id="sec-advisory" class="awesome-card border-amber-300/80 bg-gradient-to-r from-amber-50/90 via-white/95 to-amber-50/60 p-5 sm:p-6 relative overflow-hidden">
-      <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-200/30 rounded-full blur-2xl pointer-events-none"></div>
+    <!-- ================= AI CROP DOCTOR & SPEECH CENTER ================= -->
+    <div id="sec-advisory" class="awesome-card border-amber-300/80 bg-gradient-to-r from-amber-50/95 via-white to-amber-50/70 p-5 sm:p-6 relative overflow-hidden space-y-4">
+      <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-amber-200/30 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+      <!-- Doctor Top Banner -->
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-10">
         
-        <div class="flex items-start gap-4">
+        <div class="flex items-start gap-3.5">
           <div id="advisory-icon-bg" class="p-3.5 bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 rounded-2xl shrink-0 shadow-md shadow-amber-500/20 mt-0.5">
             <i data-lucide="sparkles" class="w-6 h-6 stroke-[2.5]"></i>
           </div>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-[11px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-md shadow-sm">
-                Doctor's Prescription
+                AgriPulse Autonomous AI Crop Doctor
               </span>
               <span id="crop-stage-tag" class="text-xs font-bold text-slate-600">Tomato Plant • Flowering Stage</span>
               <span class="text-slate-300">•</span>
-              <span class="text-xs font-extrabold text-rose-600 flex items-center gap-1">
+              <span id="advisory-stress-badge" class="text-xs font-extrabold text-rose-600 flex items-center gap-1">
                 <i data-lucide="zap" class="w-3.5 h-3.5"></i> Multi-Effect Stress Detected
               </span>
             </div>
@@ -500,24 +535,166 @@
             </p>
 
             <!-- Multilingual Translation Box -->
-            <p id="vernacular-advisory" class="text-xs sm:text-sm text-sky-950 font-bold mt-2 bg-white/95 p-3.5 rounded-2xl border border-sky-200 shadow-sm block leading-relaxed max-w-4xl">
+            <p id="vernacular-advisory" class="text-xs sm:text-sm text-sky-950 font-bold mt-2 bg-white/95 p-3 rounded-2xl border border-sky-200 shadow-sm block leading-relaxed max-w-4xl">
               సలహా: టమోటా ఆకు మచ్చ తెగులు మరియు నత్రజని లోపం. కాపర్ ఆక్సిక్లోరైడ్ 3 గ్రాములు 1 లీటరు నీటిలో కలిపి పిచికారీ చేయండి.
             </p>
           </div>
         </div>
 
-        <!-- Realistic Fast Female Voice Assistant Button -->
-        <div class="flex items-center gap-3 self-stretch sm:self-auto shrink-0">
-          <button id="tts-button" onclick="speakAdvisory()" class="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 cursor-pointer">
+        <!-- Voice Assistant Controls Bar with Animated Waveform -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 self-stretch lg:self-auto">
+          
+          <!-- Auto-Speak Toggle -->
+          <button onclick="toggleAutoSpeak()" id="btn-auto-speak" class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-colors" title="Toggle automatic speech on new diagnoses">
+            <span id="auto-speak-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Auto-Speak: <strong id="auto-speak-label">ON</strong></span>
+          </button>
+
+          <!-- Speaking / Audio Button -->
+          <button id="tts-button" onclick="speakAIDoctorDiagnosis()" class="flex items-center justify-center gap-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 cursor-pointer">
             <i data-lucide="volume-2" class="w-5 h-5"></i>
-            <span id="tts-button-text">🔊 సలహా వినండి (Audio)</span>
+            <span id="tts-button-text">🔊 Speak AI Doctor Diagnosis</span>
+            <!-- Waveform visualizer bars -->
+            <span id="tts-waveform" class="hidden items-center gap-0.5 ml-1">
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+              <span class="waveform-bar"></span>
+            </span>
           </button>
         </div>
 
       </div>
+
+      <!-- ================= 5-STAGE PRECAUTIONS & REMEDIATION TABS ================= -->
+      <div class="pt-2 border-t border-amber-200/70">
+        <div class="flex items-center justify-between pb-2 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600"></i>
+            <h4 class="text-xs font-black text-slate-900 uppercase tracking-wide">
+              Complete AI Agronomic Precautions & Remediation Protocol:
+            </h4>
+          </div>
+          <!-- Tab Buttons -->
+          <div class="flex items-center gap-1.5 flex-wrap text-[11px] font-bold">
+            <button onclick="switchPrecautionTab('chemical')" id="tab-btn-chemical" class="px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 shadow-sm cursor-pointer transition-all">
+              💊 Chemical Prescription
+            </button>
+            <button onclick="switchPrecautionTab('organic')" id="tab-btn-organic" class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer transition-all">
+              🌿 Organic Remedies
+            </button>
+            <button onclick="switchPrecautionTab('cultural')" id="tab-btn-cultural" class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer transition-all">
+              ⚠️ Cultural Precautions
+            </button>
+            <button onclick="switchPrecautionTab('roadmap')" id="tab-btn-roadmap" class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer transition-all">
+              📅 14-Day Recovery Roadmap
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content Panes -->
+        <div class="mt-2 text-xs leading-relaxed text-slate-700">
+          <!-- Pane 1: Chemical -->
+          <div id="pane-precautions-chemical" class="p-3.5 bg-white/95 rounded-2xl border border-amber-200 space-y-2">
+            <div class="flex items-center justify-between text-amber-900 font-bold">
+              <span>Targeted Chemical Spray & Exact Dosage:</span>
+              <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-mono">Safe Harvest Interval: 7 Days</span>
+            </div>
+            <p id="prec-chemical-text" class="text-slate-800 font-medium">
+              Spray Copper Oxychloride 50% WP @ 3.0g / Litre of water OR Mancozeb 75% WP @ 2.5g / Litre. For foliar nitrogen boost, mix 10g Urea per 1L water and spray in early morning (7-9 AM) or late afternoon (4-6 PM).
+            </p>
+          </div>
+
+          <!-- Pane 2: Organic -->
+          <div id="pane-precautions-organic" class="p-3.5 bg-white/95 rounded-2xl border border-emerald-200 space-y-2 hidden">
+            <div class="flex items-center justify-between text-emerald-900 font-bold">
+              <span>Organic & Bio-Dynamic Alternatives (Zero Chemicals):</span>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono">100% Eco-Safe</span>
+            </div>
+            <p id="prec-organic-text" class="text-slate-800 font-medium">
+              Apply 10,000 ppm Cold-Pressed Neem Oil (5ml/L of water) mixed with 1ml natural soap. Alternatively, apply Trichoderma viride bio-fungicide (5g/L) around root zone and drench canopy with Panchagavya solution (30ml/L).
+            </p>
+          </div>
+
+          <!-- Pane 3: Cultural Precautions -->
+          <div id="pane-precautions-cultural" class="p-3.5 bg-white/95 rounded-2xl border border-rose-200 space-y-2 hidden">
+            <div class="flex items-center justify-between text-rose-900 font-bold">
+              <span>Immediate Field Sanitation & Quarantine Steps:</span>
+              <span class="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-mono">Stop Outbreak</span>
+            </div>
+            <p id="prec-cultural-text" class="text-slate-800 font-medium">
+              1. Prune off bottom 30cm splash leaves immediately to prevent fungal spores from splashing up from soil during rain.
+              2. Disinfect pruning tools with 70% isopropyl alcohol between plants.
+              3. Remove and burn severely diseased plant debris outside the field.
+            </p>
+          </div>
+
+          <!-- Pane 4: 14-Day Roadmap -->
+          <div id="pane-precautions-roadmap" class="p-3.5 bg-white/95 rounded-2xl border border-sky-200 space-y-2 hidden">
+            <div class="flex items-center justify-between text-sky-900 font-bold">
+              <span>14-Day Recovery & Irrigation Schedule:</span>
+              <span class="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-mono">Full Recovery</span>
+            </div>
+            <p id="prec-roadmap-text" class="text-slate-800 font-medium">
+              • <strong>Day 1:</strong> Sanitation & primary fungicide spray.<br>
+              • <strong>Day 4:</strong> Soil aeration & foliar micronutrient feeding.<br>
+              • <strong>Day 7:</strong> Follow-up organic Neem oil bio-shield spray.<br>
+              • <strong>Day 14:</strong> Comprehensive camera audit to verify green recovery.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ASK AGRIPULSE AI DOCTOR Q&A WIDGET ================= -->
+      <div class="pt-2 border-t border-amber-200/70 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+            <i data-lucide="message-square" class="w-3.5 h-3.5 text-amber-600"></i>
+            Ask AgriPulse AI Doctor (Instant Voice & Clinical Advice):
+          </span>
+          <span class="text-[10px] text-slate-400 font-mono">Voice AI Active</span>
+        </div>
+
+        <!-- Quick Query Suggestion Chips -->
+        <div class="flex items-center gap-1.5 flex-wrap text-[10px] font-bold">
+          <button onclick="askDoctorPreset('rain_spray')" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-slate-700 border border-slate-200 rounded-xl cursor-pointer transition-colors shadow-2xs">
+            🌧️ Can I spray in rainy weather?
+          </button>
+          <button onclick="askDoctorPreset('organic_fungicide')" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-slate-700 border border-slate-200 rounded-xl cursor-pointer transition-colors shadow-2xs">
+            🌿 Homemade organic fungicide?
+          </button>
+          <button onclick="askDoctorPreset('yellow_leaves')" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-slate-700 border border-slate-200 rounded-xl cursor-pointer transition-colors shadow-2xs">
+            🍂 Why are bottom leaves yellowing?
+          </button>
+          <button onclick="askDoctorPreset('leaf_curl')" class="px-2.5 py-1 bg-white hover:bg-amber-100 text-slate-700 border border-slate-200 rounded-xl cursor-pointer transition-colors shadow-2xs">
+            🌶️ How to cure leaf curl?
+          </button>
+        </div>
+
+        <!-- Custom Question Input Box -->
+        <div class="flex items-center gap-2 pt-1">
+          <input type="text" id="ai-doctor-query-input" placeholder="Ask the AI Doctor anything about your crops, pests, fertilizers, or spraying..." class="flex-1 bg-white border border-slate-300 focus:border-amber-500 rounded-xl px-3.5 py-2 text-xs text-slate-900 font-medium focus:outline-none shadow-sm" onkeydown="if(event.key==='Enter') submitDoctorQuery()" />
+          <button onclick="submitDoctorQuery()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl text-xs font-black shadow cursor-pointer transition-all flex items-center gap-1 shrink-0">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Ask & Speak</span>
+          </button>
+        </div>
+
+        <!-- Doctor Answer Box -->
+        <div id="doctor-response-container" class="hidden p-3.5 bg-amber-100/80 border border-amber-300 rounded-2xl text-xs space-y-1">
+          <div class="flex items-center justify-between text-amber-950 font-black">
+            <span class="flex items-center gap-1.5"><i data-lucide="bot" class="w-4 h-4 text-amber-700"></i> AgriPulse AI Doctor's Clinical Response:</span>
+            <button onclick="document.getElementById('doctor-response-container').classList.add('hidden')" class="text-slate-500 hover:text-slate-800 cursor-pointer font-bold px-1">✕</button>
+          </div>
+          <p id="doctor-response-text" class="text-slate-900 font-medium leading-relaxed"></p>
+        </div>
+      </div>
+
     </div>
 
-    <!-- ================= 4 KEY TELEMETRY CARDS ================= -->
+    <!-- ================= 4 KEY TELEMETRY CARDS (AWAITING EXTERNAL IOT SENSORS) ================= -->
     <div id="sec-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
       <!-- Card 1: Soil Wetness -->
@@ -526,24 +703,24 @@
           <div class="flex justify-between items-start">
             <div>
               <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Soil Wetness (VWC)</p>
-              <h3 id="val-moisture" class="text-3xl font-black text-sky-600 mt-1 tracking-tight">26%</h3>
+              <h3 id="val-moisture" class="text-3xl font-black text-slate-400 mt-1 tracking-tight">--%</h3>
             </div>
             <div class="p-3 bg-sky-50 text-sky-600 border border-sky-100 rounded-2xl shadow-sm">
               <i data-lucide="droplet" class="w-6 h-6"></i>
             </div>
           </div>
           <p id="moisture-status-text" class="text-xs font-bold text-amber-600 mt-2.5 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Soil is drying, needs water soon
+            <i data-lucide="radio" class="w-3.5 h-3.5 animate-pulse text-amber-500"></i> Waiting for IoT Soil Sensor...
           </p>
         </div>
 
         <div class="mt-4">
           <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200">
-            <div id="bar-moisture" class="bg-gradient-to-r from-sky-500 to-emerald-400 h-full rounded-full transition-all duration-700 shadow-sm" style="width: 26%"></div>
+            <div id="bar-moisture" class="bg-gradient-to-r from-sky-500 to-emerald-400 h-full rounded-full transition-all duration-700 shadow-sm" style="width: 0%"></div>
           </div>
-          <div class="flex justify-between text-[11px] text-slate-500 mt-1.5 font-bold">
+          <div class="flex justify-between text-[11px] text-slate-400 mt-1.5 font-bold">
             <span>Dry (&lt;20%)</span>
-            <span class="text-emerald-700">Good (30-45%)</span>
+            <span>Good (30-45%)</span>
             <span>Wet</span>
           </div>
         </div>
@@ -555,19 +732,19 @@
           <div class="flex justify-between items-start">
             <div>
               <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Field Temperature</p>
-              <h3 id="val-temp" class="text-3xl font-black text-amber-500 mt-1 tracking-tight">31.5°C</h3>
+              <h3 id="val-temp" class="text-3xl font-black text-slate-400 mt-1 tracking-tight">--°C</h3>
             </div>
             <div class="p-3 bg-amber-50 text-amber-600 border border-amber-100 rounded-2xl shadow-sm">
               <i data-lucide="sun" class="w-6 h-6"></i>
             </div>
           </div>
-          <p class="text-xs font-bold text-emerald-600 mt-2.5 flex items-center gap-1">
-            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Pleasant warm weather
+          <p class="text-xs font-bold text-slate-500 mt-2.5 flex items-center gap-1">
+            <i data-lucide="radio" class="w-3.5 h-3.5 animate-pulse text-amber-500"></i> Waiting for DHT Sensor...
           </p>
         </div>
 
-        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-medium">
-          <span>Sunlight: <strong id="val-solar" class="text-slate-800 font-bold">Bright (704 W/m²)</strong></span>
+        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Sunlight: <strong id="val-solar" class="text-slate-700 font-bold">-- W/m²</strong></span>
         </div>
       </div>
 
@@ -577,40 +754,40 @@
           <div class="flex justify-between items-start">
             <div>
               <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Air Humidity</p>
-              <h3 id="val-humidity" class="text-3xl font-black text-sky-600 mt-1 tracking-tight">65%</h3>
+              <h3 id="val-humidity" class="text-3xl font-black text-slate-400 mt-1 tracking-tight">--%</h3>
             </div>
             <div class="p-3 bg-sky-50 text-sky-600 border border-sky-100 rounded-2xl shadow-sm">
               <i data-lucide="wind" class="w-6 h-6"></i>
             </div>
           </div>
-          <p class="text-xs font-bold text-slate-600 mt-2.5 flex items-center gap-1">
-            <i data-lucide="cloud" class="w-3.5 h-3.5 text-sky-500"></i> Good moisture in the air
+          <p class="text-xs font-bold text-slate-500 mt-2.5 flex items-center gap-1">
+            <i data-lucide="radio" class="w-3.5 h-3.5 animate-pulse text-sky-500"></i> Waiting for Sensor...
           </p>
         </div>
 
-        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-medium">
-          <span>Rain Forecast: <strong class="text-emerald-700 font-bold">Clear & Safe</strong></span>
+        <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+          <span>Rain Forecast: <strong class="text-slate-700 font-bold">--</strong></span>
         </div>
       </div>
 
-      <!-- Card 4: Water Motor / Pump with Robust Toggle & Flow Animations -->
-      <div id="actuator-card" class="tab-item-overview tab-item-pump awesome-card p-5 flex flex-col justify-between motor-glowing">
+      <!-- Card 4: Water Motor / Pump with Standby Initial State -->
+      <div id="actuator-card" class="tab-item-overview tab-item-pump awesome-card p-5 flex flex-col justify-between">
         <div>
           <div class="flex justify-between items-start">
             <div>
               <div class="flex items-center gap-2">
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Water Pump (Motor)</p>
-                <button onclick="togglePumpAutoMode()" id="pump-mode-badge" class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 cursor-pointer" title="Click to toggle between Auto and Manual mode">
-                  AUTO MODE
+                <button onclick="togglePumpAutoMode()" id="pump-mode-badge" class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 cursor-pointer" title="Click to toggle between Auto and Manual mode">
+                  STANDBY
                 </button>
               </div>
-              <h3 id="val-valve" class="text-2xl font-black text-emerald-600 mt-1 tracking-tight">PUMP RUNNING</h3>
+              <h3 id="val-valve" class="text-2xl font-black text-slate-400 mt-1 tracking-tight">STANDBY</h3>
             </div>
 
-            <!-- Motor turbine animation box -->
-            <button onclick="toggleActuator()" title="Click to instantly Turn Motor ON / OFF" class="cursor-pointer focus:outline-none relative group">
-              <div id="valve-icon-box" class="p-3.5 bg-emerald-500 text-white rounded-2xl shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-all flex items-center justify-center">
-                <i id="motor-turbine-icon" data-lucide="fan" class="w-6 h-6 turbine-active"></i>
+            <!-- Motor turbine box -->
+            <button onclick="toggleActuator()" title="Click to test Motor Toggle" class="cursor-pointer focus:outline-none relative group">
+              <div id="valve-icon-box" class="p-3.5 bg-slate-200 text-slate-600 rounded-2xl shadow-sm group-hover:scale-105 transition-all flex items-center justify-center">
+                <i id="motor-turbine-icon" data-lucide="fan" class="w-6 h-6"></i>
               </div>
             </button>
           </div>
@@ -621,22 +798,22 @@
               <span class="flex items-center gap-1">
                 <i data-lucide="waves" class="w-3 h-3 text-sky-500"></i> Pipeline Flow:
               </span>
-              <span id="pipeline-flow-rate" class="text-emerald-600 font-mono">14.2 L/min</span>
+              <span id="pipeline-flow-rate" class="text-slate-500 font-mono">-- L/min</span>
             </div>
             <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-              <div id="water-flow-bar" class="h-full rounded-full water-pipe-active transition-all duration-500" style="width: 100%"></div>
+              <div id="water-flow-bar" class="h-full rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
           </div>
 
-          <p id="val-actuation-desc" class="text-xs font-semibold text-slate-600 mt-2.5">
-            Auto Watering: Soil moisture is low
+          <p id="val-actuation-desc" class="text-xs font-semibold text-slate-500 mt-2.5">
+            Standby • Waiting for External IoT Controller
           </p>
         </div>
 
         <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between">
           <span class="text-xs text-slate-500 font-medium">Motor Control:</span>
-          <button onclick="toggleActuator()" id="pump-btn-text" class="text-xs font-black text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-1.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm">
-            Turn OFF Motor
+          <button onclick="toggleActuator()" id="pump-btn-text" class="text-xs font-black text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3.5 py-1.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm">
+            Standby
           </button>
         </div>
       </div>
@@ -717,6 +894,8 @@
         </div>
       </div>
     </div>
+
+
 
     <!-- ================= 3 MAIN PANELS ================= -->
     <div id="sec-panels-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
@@ -899,17 +1078,17 @@
             <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-bold">Soil Sensor</span>
           </div>
 
-          <!-- NPK 3 Pillars -->
+          <!-- NPK 3 Pillars (Awaiting Sensor) -->
           <div class="grid grid-cols-3 gap-3 mt-4 text-center">
             
             <!-- Nitrogen -->
             <div class="bg-sky-50/80 border border-sky-100 p-3 rounded-2xl shadow-sm">
               <span class="text-xs font-black text-sky-800">Nitrogen</span>
               <p class="text-[10px] text-sky-600 font-bold">(N)</p>
-              <h3 id="val-n" class="text-2xl font-black text-sky-950 mt-0.5">52</h3>
-              <p class="text-[10px] text-emerald-600 font-bold">Good Level</p>
-              <div class="w-full bg-sky-200/70 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div id="bar-n" class="bg-sky-600 h-full rounded-full" style="width: 55%"></div>
+              <h3 id="val-n" class="text-2xl font-black text-slate-400 mt-0.5">--</h3>
+              <p class="text-[10px] text-slate-500 font-bold">Waiting...</p>
+              <div class="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="bar-n" class="bg-sky-600 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
               </div>
             </div>
 
@@ -917,10 +1096,10 @@
             <div class="bg-amber-50/80 border border-amber-100 p-3 rounded-2xl shadow-sm">
               <span class="text-xs font-black text-amber-800">Phosphorus</span>
               <p class="text-[10px] text-amber-600 font-bold">(P)</p>
-              <h3 id="val-p" class="text-2xl font-black text-amber-950 mt-0.5">26</h3>
-              <p class="text-[10px] text-amber-600 font-bold">Medium Level</p>
-              <div class="w-full bg-amber-200/70 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div id="bar-p" class="bg-amber-500 h-full rounded-full" style="width: 42%"></div>
+              <h3 id="val-p" class="text-2xl font-black text-slate-400 mt-0.5">--</h3>
+              <p class="text-[10px] text-slate-500 font-bold">Waiting...</p>
+              <div class="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="bar-p" class="bg-amber-500 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
               </div>
             </div>
 
@@ -928,10 +1107,10 @@
             <div class="bg-emerald-50/80 border border-emerald-100 p-3 rounded-2xl shadow-sm">
               <span class="text-xs font-black text-emerald-800">Potassium</span>
               <p class="text-[10px] text-emerald-600 font-bold">(K)</p>
-              <h3 id="val-k" class="text-2xl font-black text-emerald-950 mt-0.5">194</h3>
-              <p class="text-[10px] text-emerald-600 font-bold">Strong Level</p>
-              <div class="w-full bg-emerald-200/70 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div id="bar-k" class="bg-emerald-500 h-full rounded-full" style="width: 78%"></div>
+              <h3 id="val-k" class="text-2xl font-black text-slate-400 mt-0.5">--</h3>
+              <p class="text-[10px] text-slate-500 font-bold">Waiting...</p>
+              <div class="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="bar-k" class="bg-emerald-500 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
               </div>
             </div>
 
@@ -943,11 +1122,11 @@
               <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
               <span class="text-xs font-bold text-slate-700">Soil Quality Score:</span>
             </div>
-            <strong id="val-ph" class="text-sm font-black text-emerald-700">Healthy & Balanced (pH 6.8)</strong>
+            <strong id="val-ph" class="text-sm font-black text-slate-500">Awaiting Soil Probe</strong>
           </div>
 
-          <p id="npk-advisory-text" class="text-xs text-slate-700 leading-relaxed bg-emerald-50/60 p-3 rounded-2xl border border-emerald-100 mt-3 font-medium">
-            Your soil nutrients are well balanced for optimal growth. No extra chemical fertilizer is needed today.
+          <p id="npk-advisory-text" class="text-xs text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-3 font-medium">
+            Waiting for external Modbus RTU / soil nutrient probe data. Connect your physical sensor to see live NPK levels.
           </p>
 
           <!-- Micronutrients & Organic Soil Bio-Health -->
@@ -1025,16 +1204,16 @@
         <div class="flex items-center gap-4 flex-wrap">
           <div class="flex items-center gap-1.5 font-bold">
             <span>Water Evaporation (ET₀):</span>
-            <strong id="val-et0" class="text-sky-700 text-sm">3.4 mm / day</strong>
+            <strong id="val-et0" class="text-slate-500 text-sm">-- mm / day</strong>
           </div>
           <span class="text-slate-300">|</span>
           <div class="flex items-center gap-1.5 font-bold">
             <span>Today's Total Water Needed:</span>
-            <strong id="val-deficit" class="text-emerald-700 text-sm">~1,850 Litres / acre</strong>
+            <strong id="val-deficit" class="text-slate-500 text-sm">-- Litres / acre</strong>
           </div>
         </div>
-        <span class="text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl font-bold">
-          ⚡ 30% Water Saved with Automatic Motor Control
+        <span class="text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl font-bold">
+          ⚡ Connect External Sensors for Real-Time Analytics
         </span>
       </div>
     </div>
@@ -1043,8 +1222,8 @@
     <div class="awesome-card p-4 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-600">
       <div class="flex items-center gap-4 flex-wrap">
         <span class="flex items-center gap-1.5 text-slate-800">
-          <i data-lucide="battery-charging" class="w-4 h-4 text-emerald-600"></i>
-          Solar LiFePO4 Battery: <strong id="val-battery" class="text-emerald-700 font-bold">94% Charged (13.2V)</strong>
+          <i data-lucide="battery-charging" class="w-4 h-4 text-slate-400"></i>
+          Solar LiFePO4 Battery: <strong id="val-battery" class="text-slate-500 font-bold">--</strong>
         </span>
         <span class="text-slate-300">|</span>
         <span class="flex items-center gap-1.5">
@@ -1151,6 +1330,149 @@
       <div class="pt-2 flex justify-end gap-2">
         <button onclick="closeFarmerAuthModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs cursor-pointer">Cancel</button>
         <button onclick="saveFarmerProfile()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-xs shadow cursor-pointer">Save & Update Token</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= EXTERNAL IOT SENSOR CONNECTION HUB MODAL ================= -->
+  <div id="iot-connect-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="awesome-card max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200">
+            <i data-lucide="cpu" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-black text-slate-900">External IoT Sensor Connection Hub</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Connect physical ESP32, Arduino, Raspberry Pi, or LoRa nodes</p>
+          </div>
+        </div>
+        <button onclick="closeIotConnectModal()" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Current IoT Status Banner -->
+      <div id="iot-modal-status-banner" class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span id="iot-modal-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span class="font-bold text-slate-800">Status: <strong id="iot-modal-status-text" class="text-amber-800 font-black">Awaiting External Sensors</strong></span>
+        </div>
+        <span class="text-[10px] bg-white border border-amber-300 text-amber-900 px-2 py-0.5 rounded-md font-mono">Zero Mock Active</span>
+      </div>
+
+      <!-- Connection Options -->
+      <div class="space-y-4 text-xs">
+
+        <!-- 1. Live WebSocket / Stream URL -->
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+          <label class="block font-bold text-slate-800">1. Connect via Custom WebSocket / LAN IP:</label>
+          <div class="flex gap-2">
+            <input type="text" id="custom-ws-url" placeholder="ws://192.168.1.50:81 or ws://localhost:8080/ws" value="" class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-emerald-500" />
+            <button onclick="connectCustomWebSocket()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold cursor-pointer transition-all shadow-sm">
+              Connect
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500">AgriPulse automatically listens on your local WebSocket <code class="font-mono bg-slate-200 px-1 rounded">/ws</code> and HTTP <code class="font-mono bg-slate-200 px-1 rounded">/api/telemetry</code>.</p>
+        </div>
+
+        <!-- 2. Test Sensor Payload Injector -->
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-slate-800">2. Test Sensor Ingestion (Direct JSON Injection):</label>
+            <button onclick="loadSampleSensorJSON()" class="text-sky-600 hover:underline font-bold text-[11px] cursor-pointer">
+              Load Sample JSON
+            </button>
+          </div>
+          <textarea id="iot-payload-input" rows="4" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-mono text-[11px] text-slate-800 focus:outline-none focus:border-emerald-500" placeholder='{"telemetry": {"soil_moisture": 38, "temperature": 29.4, "humidity": 62, "nitrogen": 48, "phosphorus": 22, "potassium": 180, "solar": 680, "ph": 6.8, "battery": 13.1}, "actuation": {"valve_open": true, "status": "Auto-Watering"}}'></textarea>
+          <div class="flex justify-between items-center pt-1">
+            <span class="text-[10px] text-slate-500">Clicking inject simulates an external IoT hardware packet.</span>
+            <button onclick="injectIotPayload()" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-xs shadow cursor-pointer flex items-center gap-1">
+              <i data-lucide="zap" class="w-3.5 h-3.5"></i> Inject Sensor Data
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Demo Mode Switch -->
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <span class="font-bold text-slate-800 block">3. Demo Mode Simulator:</span>
+            <span class="text-[11px] text-slate-500">Only enable this if you have no physical hardware and want to preview auto-simulation.</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="demo-mode-toggle" onchange="toggleDemoMode(this.checked)" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+
+        <!-- 4. Ready-to-Flash ESP32 / Arduino C++ Code -->
+        <div class="bg-slate-900 text-slate-200 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-emerald-400 font-bold flex items-center gap-1.5">
+              <i data-lucide="code" class="w-3.5 h-3.5"></i> ESP32 Arduino C++ Firmware (Ready to Flash):
+            </span>
+            <button onclick="copyEsp32Code()" id="btn-copy-esp32" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-lg text-[10px] font-mono cursor-pointer border border-slate-700">
+              Copy Code
+            </button>
+          </div>
+          <pre id="esp32-code-snippet" class="text-[10px] font-mono overflow-x-auto p-2 bg-slate-950 rounded-xl max-h-36 text-slate-300 leading-relaxed custom-scroll">
+#include &lt;WiFi.h&gt;
+#include &lt;HTTPClient.h&gt;
+#include &lt;DHT.h&gt;
+
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* serverUrl = "http://YOUR_SERVER_IP:8080/api/telemetry";
+
+#define DHTPIN 4
+#define DHTTYPE DHT11
+#define SOIL_PIN 34
+#define RELAY_PIN 5
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  dht.begin();
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) { delay(500); }
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverUrl);
+    http.addHeader("Content-Type", "application/json");
+
+    int rawSoil = analogRead(SOIL_PIN);
+    int moisture = map(rawSoil, 4095, 1500, 0, 100);
+    moisture = constrain(moisture, 0, 100);
+    float temp = dht.readTemperature();
+    float hum = dht.readHumidity();
+
+    String json = "{\"telemetry\":{\"soil_moisture\":" + String(moisture) + 
+                  ",\"temperature\":" + String(temp, 1) + 
+                  ",\"humidity\":" + String(hum, 0) + 
+                  ",\"nitrogen\":45,\"phosphorus\":25,\"potassium\":180" +
+                  ",\"solar\":680,\"ph\":6.8,\"battery\":13.2}," +
+                  "\"actuation\":{\"valve_open\":" + String(moisture < 30 ? "true" : "false") + 
+                  ",\"status\":\"" + (moisture < 30 ? "Auto-Watering" : "Soil Moist") + "\"}}";
+
+    http.POST(json);
+    http.end();
+  }
+  delay(2000);
+}
+          </pre>
+        </div>
+
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeIotConnectModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs cursor-pointer">
+          Close Hub
+        </button>
       </div>
     </div>
   </div>
@@ -1381,7 +1703,7 @@
         datasets: [
           {
             label: 'Soil Moisture (%)',
-            data: [28, 27, 26, 25, 24, 25.5, 26.3],
+            data: [null, null, null, null, null, null, null],
             borderColor: '#0284c7',
             backgroundColor: 'rgba(14, 165, 233, 0.1)',
             fill: true,
@@ -1392,7 +1714,7 @@
           },
           {
             label: 'Temperature (°C)',
-            data: [29.5, 30.0, 30.2, 30.8, 31.1, 31.3, 31.5],
+            data: [null, null, null, null, null, null, null],
             borderColor: '#f59e0b',
             tension: 0.35,
             borderWidth: 2.5,
@@ -1863,22 +2185,22 @@
     let lastLoggedDisease = "";
     let searchDebounceTimer = null;
 
-    // Water Pump Control State (Fixes Bug: Manual override flag prevents auto loop from turning pump back on!)
+    // Water Pump Control State (Starts in Zero-Mock Empty State until external IoT connects)
     let telemetryState = {
-      soil_moisture: 26.3,
-      temperature: 31.5,
-      humidity: 65.0,
-      nitrogen: 52,
-      phosphorus: 26,
-      potassium: 194,
-      ph: 6.8,
-      solar: 704,
-      et0: 3.4,
-      deficit: 1850,
-      battery: 13.2,
-      valve_open: true,
+      soil_moisture: null,
+      temperature: null,
+      humidity: null,
+      nitrogen: null,
+      phosphorus: null,
+      potassium: null,
+      ph: null,
+      solar: null,
+      et0: null,
+      deficit: null,
+      battery: null,
+      valve_open: false,
       is_manual_override: false, // Prevents auto-simulation from overriding farmer's manual OFF switch
-      valve_status: "Auto-Watering: Moisture is low"
+      valve_status: "Standby (Awaiting IoT connection)"
     };
 
     const sendTestTelegramMessage = () => sendTestWhatsAppMessage();
@@ -2321,6 +2643,32 @@
     function applyData(data) {
       currentPayload = data;
 
+      // Update global telemetry state with live external sensor packet
+      telemetryState.soil_moisture = data.telemetry.soil_moisture;
+      telemetryState.temperature = data.telemetry.temperature;
+      telemetryState.humidity = data.telemetry.humidity;
+      telemetryState.nitrogen = data.telemetry.nitrogen;
+      telemetryState.phosphorus = data.telemetry.phosphorus;
+      telemetryState.potassium = data.telemetry.potassium;
+      telemetryState.ph = data.telemetry.ph;
+      telemetryState.solar = data.telemetry.solar;
+      telemetryState.et0 = data.telemetry.et0;
+      telemetryState.deficit = data.telemetry.deficit;
+      telemetryState.battery = data.telemetry.battery;
+      telemetryState.valve_open = data.actuation.valve_open;
+      telemetryState.valve_status = data.actuation.status;
+
+      // Switch status indicator to Live Connected IoT
+      const connStatus = document.getElementById('conn-status');
+      if (connStatus) {
+        connStatus.textContent = "Live IoT";
+        connStatus.className = "text-xs font-black text-emerald-800";
+      }
+      const connPing = document.getElementById('conn-ping');
+      if (connPing) connPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+      const connDot = document.getElementById('conn-dot');
+      if (connDot) connDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+
       document.getElementById('timestamp-badge').textContent = data.timestamp.split(' ')[1] || data.timestamp;
 
       // Soil Moisture
@@ -2363,6 +2711,11 @@
       document.getElementById('ai-mitigation').textContent = data.ai_diagnostics.mitigation;
       document.getElementById('advisory-text').textContent = `${data.ai_diagnostics.disease}: ${data.ai_diagnostics.mitigation}`;
 
+      // Sync 4-Stage Precaution tabs
+      const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+      const activeDisease = crop.diseases.find(d => d.disease === data.ai_diagnostics.disease) || crop.diseases[0];
+      updatePrecautionPanes(activeDisease);
+
       // Live Multi-Effect Inference Status
       const inferClass = document.getElementById('infer-class');
       const inferProb = document.getElementById('infer-prob');
@@ -2384,8 +2737,6 @@
         if (lastLoggedDisease !== data.ai_diagnostics.disease) {
           lastLoggedDisease = data.ai_diagnostics.disease;
           const timeStr = data.timestamp.split(' ')[1] || new Date().toTimeString().split(' ')[0];
-          const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
-          const activeDisease = crop.diseases.find(d => d.disease === data.ai_diagnostics.disease) || crop.diseases[0];
 
           const newIncident = {
             id: Date.now(),
@@ -2407,6 +2758,11 @@
 
           const tgAlertText = `⚠️ *[AgriPulse Auto-Alert]*\n🌾 *Crop:* ${newIncident.crop}\n🔬 *Diagnosis:* ${data.ai_diagnostics.disease}\n💊 *Prescription:* ${data.ai_diagnostics.mitigation}`;
           sendTelegramAlert(tgAlertText);
+
+          // Automatic AI Doctor Voice Announcement if auto-speak is enabled
+          if (autoSpeakEnabled) {
+            setTimeout(() => { speakAIDoctorDiagnosis(); }, 600);
+          }
         }
       } else {
         inferTag.className = "text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded-full";
@@ -2625,8 +2981,11 @@
       }
     }
 
-    // ================= REALISTIC NATURAL FEMALE VOICE (FAST PACED 1.18x) =================
+    // ================= AI CROP DOCTOR, PRECAUTIONS & VOICE SYNTHESIS =================
     let availableVoices = [];
+    let autoSpeakEnabled = true;
+    let isDoctorSpeaking = false;
+
     function loadVoices() {
       if ('speechSynthesis' in window) {
         availableVoices = window.speechSynthesis.getVoices();
@@ -2637,62 +2996,124 @@
       loadVoices();
     }
 
-    function speakAdvisory() {
-      if (!currentPayload) return;
-      const lang = document.getElementById('lang-select').value;
-      const vernacularElem = document.getElementById('vernacular-advisory');
-      const textToSpeak = vernacularElem.textContent || currentPayload.ai_diagnostics.mitigation;
-
-      const ttsBtnText = document.getElementById('tts-button-text');
-      const originalBtnText = ttsBtnText.textContent;
-      ttsBtnText.textContent = "🔊 Speaking...";
-
-      // Strategy 1: Realistic Natural Female Google TTS Stream (Fast 1.18x Pace)
-      const audioPlayer = document.getElementById('tts-audio-player');
-      const streamUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(textToSpeak)}`;
-      
-      audioPlayer.src = streamUrl;
-      audioPlayer.playbackRate = 1.18;
-
-      audioPlayer.onended = () => {
-        ttsBtnText.textContent = originalBtnText;
-      };
-      audioPlayer.onerror = () => {
-        speakWithWebSpeechAPIFemale(textToSpeak, lang, originalBtnText);
-      };
-
-      const playPromise = audioPlayer.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          speakWithWebSpeechAPIFemale(textToSpeak, lang, originalBtnText);
-        });
+    function toggleAutoSpeak() {
+      autoSpeakEnabled = !autoSpeakEnabled;
+      const dot = document.getElementById('auto-speak-dot');
+      const label = document.getElementById('auto-speak-label');
+      if (dot && label) {
+        if (autoSpeakEnabled) {
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+          label.textContent = "ON";
+          label.className = "text-emerald-700 font-black";
+        } else {
+          dot.className = "w-2 h-2 rounded-full bg-slate-400";
+          label.textContent = "OFF";
+          label.className = "text-slate-500 font-bold";
+        }
       }
     }
 
-    function speakWithWebSpeechAPIFemale(textToSpeak, lang, originalBtnText) {
-      const ttsBtnText = document.getElementById('tts-button-text');
+    function switchPrecautionTab(tabKey) {
+      const tabs = ['chemical', 'organic', 'cultural', 'roadmap'];
+      tabs.forEach(t => {
+        const pane = document.getElementById(`pane-precautions-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (pane) {
+          if (t === tabKey) {
+            pane.classList.remove('hidden');
+          } else {
+            pane.classList.add('hidden');
+          }
+        }
+        if (btn) {
+          if (t === tabKey) {
+            btn.className = "px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 shadow-sm cursor-pointer transition-all";
+          } else {
+            btn.className = "px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer transition-all";
+          }
+        }
+      });
+    }
+
+    function getDiseasePrecautions(disease) {
+      if (disease && disease.precautions) return disease.precautions;
+      const med = (disease && disease.mitigation) || "Apply broad-spectrum bio-fungicide and adjust soil moisture.";
+      return {
+        chemical: `${med} Spray during cool morning hours (7:00 AM - 9:30 AM) or late afternoon. Avoid high winds to eliminate pesticide drift.`,
+        organic: `Apply cold-pressed 10,000 ppm Neem Oil @ 5ml/L mixed with 1ml organic soap. Complement with root-zone Trichoderma viride bio-agent @ 5g/L.`,
+        cultural: `1. Prune off bottom splash leaves (first 25cm) to prevent spore transmission. 2. Sterilize shears with 70% alcohol. 3. Clear weeds and burned diseased debris outside the field boundary.`,
+        roadmap: `• <strong>Day 1:</strong> Thorough canopy sanitation and primary fungicide spray.<br>• <strong>Day 4:</strong> Foliar micronutrient feeding and soil aeration.<br>• <strong>Day 7:</strong> Secondary bio-shield / Neem preventive spray.<br>• <strong>Day 14:</strong> Complete camera audit to verify green recovery.`
+      };
+    }
+
+    function updatePrecautionPanes(disease) {
+      if (!disease) return;
+      const p = getDiseasePrecautions(disease);
+
+      const chemEl = document.getElementById('prec-chemical-text');
+      const orgEl = document.getElementById('prec-organic-text');
+      const cultEl = document.getElementById('prec-cultural-text');
+      const roadEl = document.getElementById('prec-roadmap-text');
+
+      if (chemEl) chemEl.textContent = p.chemical;
+      if (orgEl) orgEl.textContent = p.organic;
+      if (cultEl) cultEl.textContent = p.cultural;
+      if (roadEl) roadEl.innerHTML = p.roadmap;
+    }
+
+    function speakAIDoctorDiagnosis() {
       if (!('speechSynthesis' in window)) {
-        alert("Audio speech is not supported on this browser.");
-        ttsBtnText.textContent = originalBtnText;
+        alert("Audio speech synthesis is not supported on this browser.");
         return;
       }
 
       window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
+
+      const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+      const diag = currentPayload ? currentPayload.ai_diagnostics : crop.diseases[0];
+      const lang = document.getElementById('lang-select').value;
+      const p = getDiseasePrecautions(diag);
+
+      let textToSpeak = "";
+
+      if (lang === 'te' && diag.vernacular && diag.vernacular.te) {
+        textToSpeak = `అగ్రిపల్స్ AI క్రాప్ డాక్టర్ హెచ్చరిక. పంట: ${crop.name}. ${diag.vernacular.te}. నివారణ కొరకు: మొదటి దశ, ${diag.mitigation}. రెండవ దశ, తెగులు సోకిన ఆకులను తీసివేయండి. మూడవ దశ, వేపనూనె ద్రావణం పిచికారీ చేయండి.`;
+      } else if (lang === 'hi' && diag.vernacular && diag.vernacular.hi) {
+        textToSpeak = `एग्रीपल्स AI फसल डॉक्टर चेतावनी। फसल: ${crop.name}। ${diag.vernacular.hi}। समाधान: पहला कदम, ${diag.mitigation}। दूसरा कदम, प्रभावित पत्तियों की छंटाई करें। तीसरा कदम, नीम का तेल छिड़कें।`;
+      } else if (lang === 'ta' && diag.vernacular && diag.vernacular.ta) {
+        textToSpeak = `அக்ரிபல்ஸ் AI பயிர் மருத்துவர் எச்சரிக்கை. ${diag.vernacular.ta}`;
+      } else if (lang === 'kn' && diag.vernacular && diag.vernacular.kn) {
+        textToSpeak = `ಅಗ್ರಿಪಲ್ಸ್ AI ಬೆಳೆ ವೈದ್ಯರ ಎಚ್ಚರಿಕೆ. ${diag.vernacular.kn}`;
+      } else {
+        if (!diag.isNegative) {
+          textToSpeak = `AgriPulse Autonomous AI Doctor confirms your ${crop.name} is in peak physiological health with ninety-eight percent chlorophyll vigor. No pest or pathogen stress detected. Maintain standard drip irrigation schedule.`;
+        } else {
+          textToSpeak = `AgriPulse Autonomous AI Crop Doctor Clinical Report for ${crop.name}. What is wrong: ${diag.disease} detected with ${Math.round(diag.confidence || 95)} percent confidence. Underlying cause: ${diag.desc || 'Nutrient depletion and moisture stress'}. How to overcome this problem: Step one, ${diag.mitigation}. Step two, prune off lower infected foliage to halt fungal spore splash. Step three, follow up with organic neem bio-shield within seven days.`;
+        }
+      }
+
+      const ttsBtnText = document.getElementById('tts-button-text');
+      const waveform = document.getElementById('tts-waveform');
+      const originalText = "🔊 Speak AI Doctor Diagnosis";
+
+      if (ttsBtnText) ttsBtnText.textContent = "🔊 AI Doctor Speaking...";
+      if (waveform) {
+        waveform.classList.remove('hidden');
+        waveform.classList.add('flex');
+      }
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = 1.10;
+      utterance.pitch = 1.05;
+
       let targetLangCode = "en-IN";
       if (lang === 'te') targetLangCode = "te-IN";
       else if (lang === 'hi') targetLangCode = "hi-IN";
       else if (lang === 'ta') targetLangCode = "ta-IN";
       else if (lang === 'kn') targetLangCode = "kn-IN";
-
       utterance.lang = targetLangCode;
-      utterance.rate = 1.18;
-      utterance.pitch = 1.10;
 
       if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
-      
       const femaleVoice = availableVoices.find(v => 
         (v.name.toLowerCase().includes("female") || v.name.includes("Swara") || v.name.includes("Shruti") || v.name.includes("Zira") || v.name.includes("Heera") || v.name.includes("Kavya")) && 
         (v.lang.toLowerCase().includes("in") || v.lang.toLowerCase().startsWith(lang))
@@ -2700,48 +3121,768 @@
         || availableVoices.find(v => v.name.toLowerCase().includes("female"))
         || availableVoices[0];
 
-      if (femaleVoice) {
-        utterance.voice = femaleVoice;
-      }
+      if (femaleVoice) utterance.voice = femaleVoice;
 
-      utterance.onend = () => { ttsBtnText.textContent = originalBtnText; };
-      utterance.onerror = () => { ttsBtnText.textContent = originalBtnText; };
+      utterance.onend = () => {
+        if (ttsBtnText) ttsBtnText.textContent = originalText;
+        if (waveform) {
+          waveform.classList.remove('flex');
+          waveform.classList.add('hidden');
+        }
+      };
+      utterance.onerror = () => {
+        if (ttsBtnText) ttsBtnText.textContent = originalText;
+        if (waveform) {
+          waveform.classList.remove('flex');
+          waveform.classList.add('hidden');
+        }
+      };
 
       window.speechSynthesis.speak(utterance);
     }
 
-    // ================= SIMULATION ENGINE WITH BUG-FREE MOTOR & REALISTIC PHYSICS =================
+    const speakAdvisory = speakAIDoctorDiagnosis;
+
+    // ================= ASK AGRIPULSE AI DOCTOR Q&A ASSISTANT =================
+    const DOCTOR_KNOWLEDGE_BASE = {
+      rain_spray: {
+        q: "Can I spray in rainy weather?",
+        ans: "No. Never spray pesticides or chemical fertilizers within 4 hours before expected rain or when relative humidity exceeds 90%. Rainwater washes active ingredients off leaves into the soil before absorption occurs (spray runoff), causing pesticide waste and environmental damage. Wait for calm morning sunshine and always mix a non-ionic organosilicone wetting/spreading adjuvant (0.5ml/L) to lock the spray to the waxy leaf cuticle.",
+        speech: "No, never spray when rain is expected within four hours. Rain washes away active chemicals and causes expensive pesticide runoff. Wait for clear morning sunshine and always mix a silicon wetting sticker agent."
+      },
+      organic_fungicide: {
+        q: "Homemade organic fungicide?",
+        ans: "Prepare fermented Butter-Milk (Khatta Chhach) solution: Take 5 litres of sour butter-milk in an earthen clay pot, insert a copper plate/wire, and seal for 10-14 days. The copper reacts to form natural copper lactate. Dilute with 100 litres of water and spray. Alternatively, mix 50 grams of Baking Soda (Potassium/Sodium Bicarbonate) + 50ml Cold-Pressed Neem Oil + 10L water for an instant organic anti-mildew spray.",
+        speech: "You can prepare a powerful homemade organic fungicide using fermented sour butter-milk soaked with copper in an earthen pot for ten days, or mix baking soda with neem oil in water. It rapidly halts leaf spots and mildew safely."
+      },
+      yellow_leaves: {
+        q: "Why are bottom leaves yellowing?",
+        ans: "Yellowing beginning strictly at the lower, older leaves is classic Nitrogen Chlorosis. Nitrogen is mobile within the plant, so when soil nitrogen depletes, the crop relocates nitrogen reserves from bottom leaves to feed new shoot tips. Remediation: Dissolve 10 grams of agricultural Urea in 1 litre of water and spray on foliage between 7:00 AM and 9:00 AM. Also dress soil with composted farmyard manure.",
+        speech: "Bottom leaves yellowing is caused by nitrogen deficiency because the plant moves food reserves to younger upper shoots. Overcome this by spraying 10 grams of urea dissolved in one litre of water during early morning hours."
+      },
+      leaf_curl: {
+        q: "How to cure leaf curl?",
+        ans: "Leaf curl is triggered by insect pest vectors: Thrips cause upward boat-shaped leaf margins, Broad Mites cause downward cupping with bronzing, and Whiteflies transmit Gemini viruses. Remediation: 1. Place 10 yellow and blue sticky traps per acre. 2. Spray Fipronil 5% SC @ 2ml/L mixed with Spiromesifen 22.9% SC @ 1ml/L. 3. Add 2ml/L cold-pressed Neem oil to break the insect breeding cycle.",
+        speech: "Leaf curl is transmitted by sap-sucking thrips, mites, and whiteflies. Install yellow and blue sticky traps in your plot, and spray Fipronil with Spiromesifen and neem oil to eliminate the pest vectors immediately."
+      }
+    };
+
+    function askDoctorPreset(key) {
+      const item = DOCTOR_KNOWLEDGE_BASE[key];
+      if (!item) return;
+      displayAndSpeakDoctorResponse(item.q, item.ans, item.speech);
+    }
+
+    function submitDoctorQuery() {
+      const input = document.getElementById('ai-doctor-query-input');
+      if (!input) return;
+      const query = input.value.trim();
+      if (!query) return;
+
+      const lower = query.toLowerCase();
+      let match = null;
+
+      if (lower.includes("rain") || lower.includes("weather") || lower.includes("forecast")) {
+        match = DOCTOR_KNOWLEDGE_BASE.rain_spray;
+      } else if (lower.includes("organic") || lower.includes("homemade") || lower.includes("natural") || lower.includes("bio")) {
+        match = DOCTOR_KNOWLEDGE_BASE.organic_fungicide;
+      } else if (lower.includes("yellow") || lower.includes("pale") || lower.includes("nitrogen") || lower.includes("fertilizer")) {
+        match = DOCTOR_KNOWLEDGE_BASE.yellow_leaves;
+      } else if (lower.includes("curl") || lower.includes("mite") || lower.includes("thrip") || lower.includes("whitefly")) {
+        match = DOCTOR_KNOWLEDGE_BASE.leaf_curl;
+      } else {
+        const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+        const disease = crop.diseases[0];
+        match = {
+          q: query,
+          ans: `For your ${crop.name} (${crop.stage}): regarding "${query}" — AgriPulse AI recommends maintaining soil moisture between 30% and 45% with balanced NPK. If you suspect pest or fungal stress, current diagnostic model indicates: ${disease.disease}. Prescribed treatment: ${disease.mitigation}. Ensure early morning application for maximum stomatal absorption.`,
+          speech: `Regarding your query about ${query} for ${crop.name}: AgriPulse AI recommends maintaining optimal soil moisture and applying ${disease.mitigation} in early morning hours.`
+        };
+      }
+
+      displayAndSpeakDoctorResponse(match.q, match.ans, match.speech);
+      input.value = "";
+    }
+
+    function displayAndSpeakDoctorResponse(question, answer, speechText) {
+      const box = document.getElementById('doctor-response-container');
+      const textEl = document.getElementById('doctor-response-text');
+      if (box && textEl) {
+        box.classList.remove('hidden');
+        textEl.innerHTML = `<strong class="text-slate-900 block mb-1">Q: ${question}</strong>${answer}`;
+        lucide.createIcons();
+      }
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(speechText || answer);
+        utterance.rate = 1.10;
+        utterance.pitch = 1.05;
+
+        const lang = document.getElementById('lang-select').value;
+        if (lang === 'te') utterance.lang = 'te-IN';
+        else if (lang === 'hi') utterance.lang = 'hi-IN';
+        else utterance.lang = 'en-IN';
+
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // ================= THREE.JS 3D SMART FARM DIGITAL TWIN =================
+    let farm3D = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      controls: null,
+      stalks: [],
+      sprinklerParticles: null,
+      sprinklerVelocities: null,
+      sprinklersActive: false,
+      drone: null,
+      droneRotors: [],
+      probe: null,
+      valveStation: null,
+      solarStation: null,
+      clock: null,
+      targetCameraPos: null,
+      targetControlsPos: null,
+      raycaster: null,
+      mouse: null
+    };
+
+    function init3DFarm() {
+      const canvas = document.getElementById('farm3DCanvas');
+      if (!canvas || typeof THREE === 'undefined') return;
+
+      const width = canvas.clientWidth || 800;
+      const height = canvas.clientHeight || 384;
+
+      farm3D.scene = new THREE.Scene();
+      farm3D.scene.fog = new THREE.FogExp2(0x0a0f1d, 0.012);
+
+      farm3D.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 500);
+      farm3D.camera.position.set(22, 16, 24);
+
+      farm3D.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+      farm3D.renderer.setSize(width, height, false);
+      farm3D.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      farm3D.renderer.shadowMap.enabled = true;
+      farm3D.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      farm3D.controls = new THREE.OrbitControls(farm3D.camera, canvas);
+      farm3D.controls.enableDamping = true;
+      farm3D.controls.dampingFactor = 0.05;
+      farm3D.controls.maxPolarAngle = Math.PI / 2.05;
+      farm3D.controls.minDistance = 6;
+      farm3D.controls.maxDistance = 50;
+      farm3D.controls.target.set(0, 1, 0);
+
+      farm3D.clock = new THREE.Clock();
+      farm3D.raycaster = new THREE.Raycaster();
+      farm3D.mouse = new THREE.Vector2();
+
+      // Lighting: Warm Sunlight, Ambient and Sky/Ground Bounce
+      const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.9);
+      farm3D.scene.add(ambientLight);
+
+      const sun = new THREE.DirectionalLight(0xfffae0, 1.4);
+      sun.position.set(30, 40, 20);
+      sun.castShadow = true;
+      farm3D.scene.add(sun);
+
+      const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x14532d, 0.6);
+      farm3D.scene.add(hemiLight);
+
+      // Farm Ground Terrain
+      const groundGeo = new THREE.PlaneGeometry(80, 80, 16, 16);
+      const groundMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.9, metalness: 0.1 });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      farm3D.scene.add(ground);
+
+      // Field Boundary Grid
+      const grid = new THREE.GridHelper(40, 20, 0x38bdf8, 0x1e3a5f);
+      grid.position.y = 0.02;
+      farm3D.scene.add(grid);
+
+      // 6 Raised Soil Beds & Rows of Leafy Crops
+      const bedMat = new THREE.MeshStandardMaterial({ color: 0x3b2716, roughness: 0.95 });
+      const plantStemMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.7 });
+      const foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+      const fruitMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
+
+      for (let row = -2; row <= 3; row++) {
+        const zPos = row * 3.6;
+        const bedGeo = new THREE.BoxGeometry(26, 0.35, 2.2);
+        const bedMesh = new THREE.Mesh(bedGeo, bedMat);
+        bedMesh.position.set(0, 0.18, zPos);
+        bedMesh.receiveShadow = true;
+        bedMesh.castShadow = true;
+        farm3D.scene.add(bedMesh);
+
+        for (let x = -11; x <= 11; x += 2.2) {
+          const plantGroup = new THREE.Group();
+          plantGroup.position.set(x + (Math.random() * 0.3 - 0.15), 0.35, zPos + (Math.random() * 0.3 - 0.15));
+
+          const stemGeo = new THREE.CylinderGeometry(0.04, 0.07, 1.2, 6);
+          const stem = new THREE.Mesh(stemGeo, plantStemMat);
+          stem.position.y = 0.6;
+          plantGroup.add(stem);
+
+          const leafGeo = new THREE.ConeGeometry(0.55, 0.9, 5);
+          const leaf1 = new THREE.Mesh(leafGeo, foliageMat);
+          leaf1.position.y = 1.0;
+          leaf1.rotation.y = Math.random() * Math.PI;
+          plantGroup.add(leaf1);
+
+          const leaf2 = new THREE.Mesh(leafGeo, foliageMat);
+          leaf2.position.set(0.15, 0.7, 0.1);
+          leaf2.scale.set(0.7, 0.7, 0.7);
+          leaf2.rotation.z = 0.3;
+          plantGroup.add(leaf2);
+
+          if (Math.random() > 0.4) {
+            const fruitGeo = new THREE.SphereGeometry(0.12, 6, 6);
+            const fruit = new THREE.Mesh(fruitGeo, fruitMat);
+            fruit.position.set(0.2, 0.5, 0.2);
+            plantGroup.add(fruit);
+          }
+
+          farm3D.scene.add(plantGroup);
+          farm3D.stalks.push({ mesh: plantGroup, baseX: plantGroup.position.x, phase: Math.random() * Math.PI * 2 });
+        }
+      }
+
+      // Sprinklers (3 Risers & Particle Emitter)
+      const pipeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.6, roughness: 0.3 });
+      const sprinklerPositions = [
+        new THREE.Vector3(-6, 0.8, 0),
+        new THREE.Vector3(0, 0.8, 3.6),
+        new THREE.Vector3(6, 0.8, -3.6)
+      ];
+
+      sprinklerPositions.forEach(pos => {
+        const riserGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8);
+        const riser = new THREE.Mesh(riserGeo, pipeMat);
+        riser.position.copy(pos);
+        riser.position.y = 0.6;
+        farm3D.scene.add(riser);
+
+        const headGeo = new THREE.SphereGeometry(0.14, 8, 8);
+        const headMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.copy(pos);
+        head.position.y = 1.25;
+        farm3D.scene.add(head);
+      });
+
+      const particleCount = 450;
+      const particleGeo = new THREE.BufferGeometry();
+      const pPositions = new Float32Array(particleCount * 3);
+      const pVelocities = [];
+
+      for (let i = 0; i < particleCount; i++) {
+        const source = sprinklerPositions[i % sprinklerPositions.length];
+        pPositions[i * 3] = source.x;
+        pPositions[i * 3 + 1] = source.y + 0.4;
+        pPositions[i * 3 + 2] = source.z;
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.08 + Math.random() * 0.12;
+        pVelocities.push({
+          x: Math.cos(angle) * speed,
+          y: 0.12 + Math.random() * 0.15,
+          z: Math.sin(angle) * speed,
+          source: source
+        });
+      }
+
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+      const particleMat = new THREE.PointsMaterial({
+        color: 0x38bdf8,
+        size: 0.15,
+        transparent: true,
+        opacity: 0.85
+      });
+      farm3D.sprinklerParticles = new THREE.Points(particleGeo, particleMat);
+      farm3D.sprinklerParticles.visible = false;
+      farm3D.scene.add(farm3D.sprinklerParticles);
+      farm3D.sprinklerVelocities = pVelocities;
+
+      // ================= 4 INTERACTIVE IOT SENSOR NODES =================
+      
+      // Node 1: Autonomous Vision Drone
+      const droneGroup = new THREE.Group();
+      droneGroup.position.set(0, 6.2, 0);
+      droneGroup.userData = {
+        type: 'drone',
+        title: 'Autonomous Vision Drone (Edge AI)',
+        desc: 'Performs multi-spectral canopy scans and real-time disease detection with onboard MobileNetV3 / Gemini AI.',
+        metric1: 'Altitude: 6.2m AGL',
+        metric2: 'Status: Airborne Scanning'
+      };
+
+      const bodyGeo = new THREE.BoxGeometry(0.7, 0.22, 0.7);
+      const droneMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2, metalness: 0.8 });
+      const droneBody = new THREE.Mesh(bodyGeo, droneMat);
+      droneGroup.add(droneBody);
+
+      const camGeo = new THREE.SphereGeometry(0.16, 8, 8);
+      const camMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8 });
+      const camGimbal = new THREE.Mesh(camGeo, camMat);
+      camGimbal.position.set(0, -0.15, 0.2);
+      droneGroup.add(camGimbal);
+
+      const armMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+      const rotorMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.7 });
+      const armOffsets = [[0.6, 0.6], [-0.6, 0.6], [0.6, -0.6], [-0.6, -0.6]];
+
+      armOffsets.forEach(([ox, oz]) => {
+        const armGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.8);
+        const arm = new THREE.Mesh(armGeo, armMat);
+        arm.position.set(ox * 0.5, 0, oz * 0.5);
+        arm.rotation.z = ox > 0 ? -0.8 : 0.8;
+        droneGroup.add(arm);
+
+        const rotorGeo = new THREE.BoxGeometry(0.65, 0.02, 0.08);
+        const rotor = new THREE.Mesh(rotorGeo, rotorMat);
+        rotor.position.set(ox, 0.12, oz);
+        droneGroup.add(rotor);
+        farm3D.droneRotors.push(rotor);
+      });
+
+      farm3D.scene.add(droneGroup);
+      farm3D.drone = droneGroup;
+
+      // Node 2: Soil Multimeter Probe
+      const probeGroup = new THREE.Group();
+      probeGroup.position.set(2.5, 0, 1.8);
+      probeGroup.userData = {
+        type: 'probe',
+        title: 'Multi-Depth Soil Modbus Probe',
+        desc: 'Monitors soil moisture (VWC), dielectric permittivity, electrical conductivity (EC), and NPK levels.',
+        metric1: 'Depth: 20cm Root Zone',
+        metric2: 'Bus: RS485 Modbus RTU'
+      };
+
+      const probeBoxGeo = new THREE.BoxGeometry(0.4, 0.6, 0.3);
+      const probeBoxMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.4 });
+      const probeBox = new THREE.Mesh(probeBoxGeo, probeBoxMat);
+      probeBox.position.y = 0.7;
+      probeGroup.add(probeBox);
+
+      const antGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.8);
+      const antMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+      const antenna = new THREE.Mesh(antGeo, antMat);
+      antenna.position.set(0.12, 1.2, 0);
+      probeGroup.add(antenna);
+
+      const ringGeo = new THREE.TorusGeometry(0.3, 0.04, 8, 24);
+      const ringMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 1.0 });
+      const probeRing = new THREE.Mesh(ringGeo, ringMat);
+      probeRing.rotation.x = Math.PI / 2;
+      probeRing.position.y = 0.4;
+      probeGroup.add(probeRing);
+
+      farm3D.scene.add(probeGroup);
+      farm3D.probe = probeGroup;
+
+      // Node 3: Solenoid Water Valve Station
+      const valveGroup = new THREE.Group();
+      valveGroup.position.set(-8, 0, -4);
+      valveGroup.userData = {
+        type: 'valve',
+        title: 'Smart Solenoid Valve & Motor Node',
+        desc: 'Controls pipeline hydraulic flow with pressure relief manifold, flow meter, and PID loop regulation.',
+        metric1: 'Flow: 14.2 L/min Target',
+        metric2: 'Relay: Active Controlled'
+      };
+
+      const pumpGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.9, 16);
+      const pumpMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.6 });
+      const pumpMesh = new THREE.Mesh(pumpGeo, pumpMat);
+      pumpMesh.position.y = 0.55;
+      valveGroup.add(pumpMesh);
+
+      const p1Geo = new THREE.CylinderGeometry(0.12, 0.12, 1.8);
+      const p1 = new THREE.Mesh(p1Geo, pipeMat);
+      p1.rotation.z = Math.PI / 2;
+      p1.position.set(0, 0.55, 0);
+      valveGroup.add(p1);
+
+      const wheelGeo = new THREE.TorusGeometry(0.24, 0.04, 8, 16);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.position.set(0, 1.1, 0);
+      valveGroup.add(wheel);
+
+      farm3D.scene.add(valveGroup);
+      farm3D.valveStation = valveGroup;
+
+      // Node 4: Solar IoT Gateway Station
+      const solarGroup = new THREE.Group();
+      solarGroup.position.set(9, 0, -6);
+      solarGroup.userData = {
+        type: 'solar',
+        title: 'Solar Microclimate Energy Hub',
+        desc: 'Provides off-grid photovoltaic power (18V 50W) and environmental sensor telemetry back to cloud.',
+        metric1: 'Output: 13.2V (94%)',
+        metric2: 'Solar Flux: 704 W/m²'
+      };
+
+      const poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.5);
+      const pole = new THREE.Mesh(poleGeo, armMat);
+      pole.position.y = 1.25;
+      solarGroup.add(pole);
+
+      const panelGeo = new THREE.BoxGeometry(1.6, 0.08, 1.1);
+      const panelMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.1, metalness: 0.9 });
+      const panel = new THREE.Mesh(panelGeo, panelMat);
+      panel.position.set(0, 2.5, 0);
+      panel.rotation.x = 0.5;
+      solarGroup.add(panel);
+
+      farm3D.scene.add(solarGroup);
+      farm3D.solarStation = solarGroup;
+
+      // Listeners
+      canvas.addEventListener('pointerdown', on3DCanvasClick);
+      window.addEventListener('resize', on3DResize);
+
+      // Start 60 FPS Render Loop
+      animate3DFarm();
+    }
+
+    function on3DResize() {
+      const canvas = document.getElementById('farm3DCanvas');
+      if (!canvas || !farm3D.renderer || !farm3D.camera) return;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      farm3D.camera.aspect = width / height;
+      farm3D.camera.updateProjectionMatrix();
+      farm3D.renderer.setSize(width, height, false);
+    }
+
+    function on3DCanvasClick(event) {
+      if (!farm3D.renderer || !farm3D.camera) return;
+      const canvas = farm3D.renderer.domElement;
+      const rect = canvas.getBoundingClientRect();
+      farm3D.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      farm3D.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      farm3D.raycaster.setFromCamera(farm3D.mouse, farm3D.camera);
+      const interactiveNodes = [farm3D.drone, farm3D.probe, farm3D.valveStation, farm3D.solarStation].filter(Boolean);
+      const intersects = farm3D.raycaster.intersectObjects(interactiveNodes, true);
+
+      if (intersects.length > 0) {
+        let root = intersects[0].object;
+        while (root.parent && root.parent !== farm3D.scene) {
+          root = root.parent;
+        }
+        if (root.userData && root.userData.title) {
+          update3DHUD(root.userData);
+          focus3DNode(root.userData.type);
+        }
+      }
+    }
+
+    function update3DHUD(data) {
+      const title = document.getElementById('hud-node-title');
+      const desc = document.getElementById('hud-node-desc');
+      const m1 = document.getElementById('hud-node-metric-1');
+      const m2 = document.getElementById('hud-node-metric-2');
+      if (title) title.textContent = data.title;
+      if (desc) desc.textContent = data.desc;
+      if (m1) m1.textContent = data.metric1;
+      if (m2) m2.textContent = data.metric2;
+    }
+
+    function reset3DCamera() {
+      if (!farm3D.camera || !farm3D.controls) return;
+      farm3D.targetCameraPos = new THREE.Vector3(22, 16, 24);
+      farm3D.targetControlsPos = new THREE.Vector3(0, 1, 0);
+      update3DHUD({
+        title: '3D Farm Digital Twin (Overview)',
+        desc: 'Rotatable digital twin synced with field sensors, automated irrigation, and aerial drone diagnostics.',
+        metric1: 'Simulation: Real-Time 60 FPS',
+        metric2: 'Status: Synced'
+      });
+    }
+
+    function focus3DNode(type) {
+      if (!farm3D.camera || !farm3D.controls) return;
+      if (type === 'drone' && farm3D.drone) {
+        farm3D.targetCameraPos = new THREE.Vector3(farm3D.drone.position.x + 3, farm3D.drone.position.y + 1.5, farm3D.drone.position.z + 4);
+        farm3D.targetControlsPos = farm3D.drone.position.clone();
+        update3DHUD(farm3D.drone.userData);
+      } else if (type === 'probe' && farm3D.probe) {
+        farm3D.targetCameraPos = new THREE.Vector3(farm3D.probe.position.x + 2.5, farm3D.probe.position.y + 1.8, farm3D.probe.position.z + 3);
+        farm3D.targetControlsPos = farm3D.probe.position.clone();
+        update3DHUD(farm3D.probe.userData);
+      } else if (type === 'valve' && farm3D.valveStation) {
+        farm3D.targetCameraPos = new THREE.Vector3(farm3D.valveStation.position.x + 3, farm3D.valveStation.position.y + 1.8, farm3D.valveStation.position.z + 3.5);
+        farm3D.targetControlsPos = farm3D.valveStation.position.clone();
+        update3DHUD(farm3D.valveStation.userData);
+      }
+    }
+
+    function toggle3DSprinklers() {
+      farm3D.sprinklersActive = !farm3D.sprinklersActive;
+      const btn = document.getElementById('btn-3d-sprinklers');
+      if (btn) {
+        if (farm3D.sprinklersActive) {
+          btn.className = "px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-sm";
+          btn.innerHTML = '<i data-lucide="droplet" class="w-3.5 h-3.5"></i> Stop Sprinklers';
+        } else {
+          btn.className = "px-2.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-sm";
+          btn.innerHTML = '💦 Test Sprinklers';
+        }
+        lucide.createIcons();
+      }
+    }
+
+    function animate3DFarm() {
+      requestAnimationFrame(animate3DFarm);
+      if (!farm3D.renderer || !farm3D.scene || !farm3D.camera) return;
+
+      const elapsed = farm3D.clock.getElapsedTime();
+
+      if (farm3D.targetCameraPos) {
+        farm3D.camera.position.lerp(farm3D.targetCameraPos, 0.05);
+        if (farm3D.camera.position.distanceTo(farm3D.targetCameraPos) < 0.1) {
+          farm3D.targetCameraPos = null;
+        }
+      }
+      if (farm3D.targetControlsPos) {
+        farm3D.controls.target.lerp(farm3D.targetControlsPos, 0.05);
+        if (farm3D.controls.target.distanceTo(farm3D.targetControlsPos) < 0.1) {
+          farm3D.targetControlsPos = null;
+        }
+      }
+
+      // Wind sway on plants
+      farm3D.stalks.forEach(s => {
+        s.mesh.rotation.z = Math.sin(elapsed * 2.2 + s.phase) * 0.06;
+      });
+
+      // Drone flight & rotor spin
+      if (farm3D.drone) {
+        farm3D.drone.position.y = 6.2 + Math.sin(elapsed * 2.0) * 0.25;
+        farm3D.droneRotors.forEach((r, idx) => {
+          r.rotation.y += (idx % 2 === 0 ? 0.45 : -0.45);
+        });
+      }
+
+      // Sprinklers water particles
+      const isSprinkling = farm3D.sprinklersActive || (telemetryState && telemetryState.valve_open);
+      if (farm3D.sprinklerParticles) {
+        farm3D.sprinklerParticles.visible = isSprinkling;
+        if (isSprinkling && farm3D.sprinklerVelocities) {
+          const positions = farm3D.sprinklerParticles.geometry.attributes.position.array;
+          for (let i = 0; i < farm3D.sprinklerVelocities.length; i++) {
+            const v = farm3D.sprinklerVelocities[i];
+            positions[i * 3] += v.x;
+            positions[i * 3 + 1] += v.y;
+            positions[i * 3 + 2] += v.z;
+            v.y -= 0.006;
+
+            if (positions[i * 3 + 1] <= 0.1) {
+              positions[i * 3] = v.source.x;
+              positions[i * 3 + 1] = v.source.y + 0.45;
+              positions[i * 3 + 2] = v.source.z;
+              const angle = Math.random() * Math.PI * 2;
+              const speed = 0.07 + Math.random() * 0.12;
+              v.x = Math.cos(angle) * speed;
+              v.y = 0.11 + Math.random() * 0.14;
+              v.z = Math.sin(angle) * speed;
+            }
+          }
+          farm3D.sprinklerParticles.geometry.attributes.position.needsUpdate = true;
+        }
+      }
+
+      farm3D.controls.update();
+      farm3D.renderer.render(farm3D.scene, farm3D.camera);
+    }
+
+    // ================= EXTERNAL IOT SENSOR CONNECTION HUB =================
+    function openIotConnectModal() {
+      const m = document.getElementById('iot-connect-modal');
+      if (m) m.classList.remove('hidden');
+    }
+
+    function closeIotConnectModal() {
+      const m = document.getElementById('iot-connect-modal');
+      if (m) m.classList.add('hidden');
+    }
+
+    function connectCustomWebSocket() {
+      const input = document.getElementById('custom-ws-url');
+      const url = input ? input.value.trim() : "";
+      if (!url) {
+        alert("Please enter a valid WebSocket URL (e.g. ws://192.168.1.50:81)");
+        return;
+      }
+      try {
+        const customWs = new WebSocket(url);
+        document.getElementById('iot-modal-status-text').textContent = `Connecting to ${url}...`;
+        customWs.onopen = () => {
+          document.getElementById('iot-modal-status-text').textContent = `Connected to ${url}!`;
+          document.getElementById('iot-modal-status-banner').className = "p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs";
+          document.getElementById('iot-modal-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+          document.getElementById('conn-status').textContent = "Live IoT";
+          document.getElementById('conn-status').className = "text-xs font-black text-emerald-800";
+        };
+        customWs.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            applyData(data);
+          } catch(err){}
+        };
+        customWs.onerror = () => {
+          alert(`Could not connect to ${url}. Check IP and firewall.`);
+        };
+      } catch(e) {
+        alert(`WebSocket initialization error: ${e.message}`);
+      }
+    }
+
+    function loadSampleSensorJSON() {
+      const input = document.getElementById('iot-payload-input');
+      if (input) {
+        input.value = JSON.stringify({
+          telemetry: {
+            soil_moisture: 38.4,
+            temperature: 29.8,
+            humidity: 62.0,
+            nitrogen: 48,
+            phosphorus: 24,
+            potassium: 185,
+            solar: 680,
+            ph: 6.8,
+            battery: 13.1
+          },
+          actuation: {
+            valve_open: false,
+            status: "Standby: Moisture optimal"
+          }
+        }, null, 2);
+      }
+    }
+
+    function injectIotPayload() {
+      const input = document.getElementById('iot-payload-input');
+      if (!input || !input.value.trim()) {
+        alert("Please paste or load sample sensor JSON payload.");
+        return;
+      }
+      try {
+        const parsed = JSON.parse(input.value.trim());
+        const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+        const disease = crop.diseases[0];
+        const now = new Date();
+        const timeStr = now.toTimeString().split(' ')[0];
+
+        const fullPayload = {
+          timestamp: `${now.toISOString().split('T')[0]} ${timeStr}`,
+          crop_profile: { crop: selectedCrop, name: crop.name, stage: crop.stage },
+          telemetry: {
+            soil_moisture: parsed.telemetry?.soil_moisture ?? 35,
+            temperature: parsed.telemetry?.temperature ?? 30,
+            humidity: parsed.telemetry?.humidity ?? 60,
+            nitrogen: parsed.telemetry?.nitrogen ?? 50,
+            phosphorus: parsed.telemetry?.phosphorus ?? 25,
+            potassium: parsed.telemetry?.potassium ?? 190,
+            ph: parsed.telemetry?.ph ?? 6.8,
+            solar: parsed.telemetry?.solar ?? 700,
+            et0: parsed.telemetry?.et0 ?? 3.4,
+            deficit: parsed.telemetry?.deficit ?? 1600,
+            battery: parsed.telemetry?.battery ?? 13.2
+          },
+          ai_diagnostics: parsed.ai_diagnostics || {
+            disease: disease.disease,
+            secondary: disease.secondary,
+            secondaryProb: disease.secondaryProb,
+            isNegative: disease.isNegative,
+            severity: disease.severity,
+            desc: disease.desc,
+            confidence: disease.confidence,
+            mitigation: disease.mitigation,
+            vernacular: disease.vernacular
+          },
+          actuation: parsed.actuation || {
+            valve_open: false,
+            status: "Standby: Sensor data received"
+          }
+        };
+
+        applyData(fullPayload);
+        document.getElementById('iot-modal-status-text').textContent = "External Packet Ingested Successfully!";
+        document.getElementById('iot-modal-status-banner').className = "p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs";
+        document.getElementById('iot-modal-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        closeIotConnectModal();
+        sendTelegramAlert(`📡 *External IoT Sensor Data Ingested:* Soil Moisture: ${fullPayload.telemetry.soil_moisture}%, Temp: ${fullPayload.telemetry.temperature}°C, NPK: ${fullPayload.telemetry.nitrogen}-${fullPayload.telemetry.phosphorus}-${fullPayload.telemetry.potassium}.`);
+      } catch(err) {
+        alert("Invalid JSON: " + err.message);
+      }
+    }
+
+    function toggleDemoMode(isChecked) {
+      if (isChecked) {
+        startLocalSimulation();
+      } else {
+        if (localMockTimer) {
+          clearInterval(localMockTimer);
+          localMockTimer = null;
+        }
+        isMockMode = false;
+        document.getElementById('conn-status').textContent = "Awaiting IoT";
+        document.getElementById('conn-status').className = "text-xs font-bold text-slate-500";
+        document.getElementById('conn-ping').className = "hidden";
+        document.getElementById('conn-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-slate-400";
+      }
+    }
+
+    function copyEsp32Code() {
+      const code = document.getElementById('esp32-code-snippet').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-esp32');
+        if (btn) {
+          btn.textContent = "Copied!";
+          setTimeout(() => { btn.textContent = "Copy Code"; }, 2000);
+        }
+      });
+    }
+
+    // ================= SIMULATION ENGINE (FOR EXPLICIT DEMO PREVIEWS ONLY) =================
     function triggerSimulationCycle() {
       const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
 
-      // Check if user has engaged manual override
       if (!telemetryState.is_manual_override) {
-        // In Auto Mode: follow PID threshold boundaries
         if (telemetryState.valve_open) {
-          telemetryState.soil_moisture = +(Math.min(telemetryState.soil_moisture + 0.9, 52.0)).toFixed(1);
+          telemetryState.soil_moisture = +(Math.min((telemetryState.soil_moisture || 25.0) + 0.9, 52.0)).toFixed(1);
           if (telemetryState.soil_moisture >= 45.0) {
             telemetryState.valve_open = false;
             telemetryState.valve_status = "Motor Auto-Stopped: Optimal moisture reached";
           }
         } else {
-          telemetryState.soil_moisture = +(Math.max(telemetryState.soil_moisture - 0.4, 18.0)).toFixed(1);
+          telemetryState.soil_moisture = +(Math.max((telemetryState.soil_moisture || 25.0) - 0.4, 18.0)).toFixed(1);
           if (telemetryState.soil_moisture <= 24.0) {
             telemetryState.valve_open = true;
             telemetryState.valve_status = "Auto-Watering: Soil moisture is low (<25%)";
           }
         }
       } else {
-        // In Manual Override Mode: NEVER force motor on or off! Respect farmer command!
         if (telemetryState.valve_open) {
-          telemetryState.soil_moisture = +(Math.min(telemetryState.soil_moisture + 0.9, 60.0)).toFixed(1);
+          telemetryState.soil_moisture = +(Math.min((telemetryState.soil_moisture || 25.0) + 0.9, 60.0)).toFixed(1);
           telemetryState.valve_status = "Manual Mode: Water Motor is RUNNING";
         } else {
-          telemetryState.soil_moisture = +(Math.max(telemetryState.soil_moisture - 0.3, 14.0)).toFixed(1);
+          telemetryState.soil_moisture = +(Math.max((telemetryState.soil_moisture || 25.0) - 0.3, 14.0)).toFixed(1);
           telemetryState.valve_status = "Manual Mode: Water Motor is STOPPED by Farmer";
         }
       }
 
-      // Cycle disease occasionally
       if (Math.random() < 0.12) {
         diseaseIndex = (diseaseIndex + 1) % crop.diseases.length;
       }
@@ -2758,17 +3899,17 @@
           stage: crop.stage
         },
         telemetry: {
-          soil_moisture: telemetryState.soil_moisture,
-          temperature: telemetryState.temperature,
-          humidity: telemetryState.humidity,
-          nitrogen: telemetryState.nitrogen,
-          phosphorus: telemetryState.phosphorus,
-          potassium: telemetryState.potassium,
-          ph: telemetryState.ph,
-          solar: telemetryState.solar,
-          et0: telemetryState.et0,
-          deficit: telemetryState.deficit,
-          battery: telemetryState.battery
+          soil_moisture: telemetryState.soil_moisture || 26.3,
+          temperature: telemetryState.temperature || 31.5,
+          humidity: telemetryState.humidity || 65.0,
+          nitrogen: telemetryState.nitrogen || 52,
+          phosphorus: telemetryState.phosphorus || 26,
+          potassium: telemetryState.potassium || 194,
+          ph: telemetryState.ph || 6.8,
+          solar: telemetryState.solar || 704,
+          et0: telemetryState.et0 || 3.4,
+          deficit: telemetryState.deficit || 1850,
+          battery: telemetryState.battery || 13.2
         },
         ai_diagnostics: {
           disease: activeDisease.disease,
@@ -2809,10 +3950,6 @@
         if (res.ok) {
           const data = await res.json();
           isMockMode = false;
-          document.getElementById('conn-status').textContent = "Live IoT";
-          document.getElementById('conn-status').className = "text-xs font-black text-emerald-800";
-          document.getElementById('conn-ping').className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
-          document.getElementById('conn-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
           applyData(data);
           return true;
         }
@@ -2820,13 +3957,25 @@
       return false;
     }
 
+    // ================= ZERO-MOCK INITIALIZATION (AWAITING EXTERNAL IOT SENSORS) =================
     function initWebSocket() {
       renderIncidentLogs();
-      triggerSimulationCycle();
       fetchRealWeather(activeLocation.lat, activeLocation.lon, activeLocation.name);
+      
+      // Initialize Three.js 3D WebGL Farm Simulation
+      init3DFarm();
+
+      // Initialize default crop precautions
+      const crop = CROP_CATALOG[selectedCrop] || CROP_CATALOG.tomato;
+      updatePrecautionPanes(crop.diseases[0]);
+
+      // IMPORTANT (Zero-Mock Requirement): Do NOT run mock simulation cycle automatically on startup!
+      // Telemetry values remain empty (--%, --°C) and status says '⚪ Awaiting IoT' until an external sensor connects.
+      const connStatus = document.getElementById('conn-status');
+      if (connStatus) connStatus.textContent = "Awaiting IoT";
 
       if (window.location.protocol === 'file:') {
-        startLocalSimulation();
+        console.log("AgriPulse Pro initialized in file mode. Awaiting external IoT sensors or test injection.");
         return;
       }
 
@@ -2845,6 +3994,8 @@
           }
           document.getElementById('conn-status').textContent = "Live IoT";
           document.getElementById('conn-status').className = "text-xs font-black text-emerald-800";
+          document.getElementById('conn-ping').className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+          document.getElementById('conn-dot').className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
         };
 
         ws.onmessage = (event) => {
@@ -2855,24 +4006,14 @@
         };
 
         ws.onclose = async () => {
-          const polled = await pollHttpTelemetry();
-          if (polled) {
-            if (!localMockTimer) localMockTimer = setInterval(pollHttpTelemetry, 2000);
-          } else {
-            startLocalSimulation();
-          }
+          await pollHttpTelemetry();
         };
 
         ws.onerror = async () => {
-          const polled = await pollHttpTelemetry();
-          if (polled) {
-            if (!localMockTimer) localMockTimer = setInterval(pollHttpTelemetry, 2000);
-          } else {
-            startLocalSimulation();
-          }
+          await pollHttpTelemetry();
         };
       } catch (e) {
-        startLocalSimulation();
+        console.log("Local WebSocket not connected. Awaiting external sensors.");
       }
     }
 
